@@ -1,0 +1,13 @@
+﻿@using MauiHybridAuth.Shared.Services
+@page "/logout"
+@inject NavigationManager navigationManager
+@inject ICustomAuthenticationStateProvider AuthStateProvider
+
+<div class="loader loader-bouncing"><span>Redirecting...</span></div>
+@code{
+    protected override void OnInitialized()
+    {
+        AuthStateProvider.Logout();
+        navigationManager.NavigateTo("/login");
+    }      
+}

@@ -1,0 +1,15 @@
+﻿@using MauiHybridAuth.Shared.Pages
+@using Microsoft.AspNetCore.Components.Authorization
+
+<Router AppAssembly="typeof(Layout.MainLayout).Assembly">
+    <Found Context="routeData">
+       <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+            <Authorizing>
+                Authorizing...
+            </Authorizing>
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>   
+    </Found>
+</Router>
