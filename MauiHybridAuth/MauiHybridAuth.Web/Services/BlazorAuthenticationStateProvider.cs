@@ -11,11 +11,11 @@ namespace MauiHybridAuth.Web.Services
 {
     public class BlazorAuthenticationStateProvider : CustomAuthenticationStateProvider, ICustomAuthenticationStateProvider
     {
-        private readonly SignInManager<IdentityUser> _context;
+        private readonly SignInManager<IdentityUser> signInManager;
 
         public BlazorAuthenticationStateProvider(SignInManager<IdentityUser> context)
         {
-            _context = context;
+            signInManager = context;
         }
 
         protected override async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginModel loginModel)
@@ -25,9 +25,8 @@ namespace MauiHybridAuth.Web.Services
 
             try
             {
-                
-                //Check database for user. Getting an error here... 
-                var result = await _context.PasswordSignInAsync(loginModel.Email, loginModel.Password, false, false);
+                //Use the SignInManager to log in the user since we're on the server
+                var result = await signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, false, false);
                 LoginStatus = result.Succeeded ? LoginStatus.Success : LoginStatus.Failed;
 
                 if (LoginStatus == LoginStatus.Success)
