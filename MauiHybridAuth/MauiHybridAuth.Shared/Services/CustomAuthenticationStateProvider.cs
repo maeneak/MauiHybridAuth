@@ -23,11 +23,18 @@ namespace MauiHybridAuth.Shared.Services
     public abstract class CustomAuthenticationStateProvider : AuthenticationStateProvider, ICustomAuthenticationStateProvider
     {
         //TODO: Place this in AppSettings or Client config file
-        private const string LoginUri = "https://localhost:7157/login";
-
+        protected string LoginUri { get; set; } = "https://localhost:7157/login";
+         
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
         protected ClaimsPrincipal currentUser = new ClaimsPrincipal(new ClaimsIdentity());
-        
+
+        //Allow the derived class to override the HttpClient creation.
+        //The MauiAuthenticationStateProvider needs this when accessing localhost via emulators and simulators.
+        protected virtual HttpClient GetHttpClient()
+        {
+            return new HttpClient();
+        }
+
         public override Task<AuthenticationState> GetAuthenticationStateAsync() =>
             Task.FromResult(new AuthenticationState(currentUser));
 
@@ -62,10 +69,10 @@ namespace MauiHybridAuth.Shared.Services
 
             try
             {
-                var httpClient = new HttpClient();
+                var httpClient = GetHttpClient();
                 var loginData = new { loginModel.Email, loginModel.Password };
-
                 var response = await httpClient.PostAsJsonAsync(LoginUri, loginData);
+
                 LoginStatus = response.IsSuccessStatusCode ? LoginStatus.Success : LoginStatus.Failed;
 
                 if (LoginStatus == LoginStatus.Success)
