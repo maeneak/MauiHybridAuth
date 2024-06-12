@@ -1,6 +1,8 @@
 using MauiHybridAuth.Shared.Services;
 using MauiHybridAuth.Web.Components;
 using MauiHybridAuth.Web.Services;
+using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //Register needed elements for authentication:
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
 // This is our custom provider
 builder.Services.AddScoped<ICustomAuthenticationStateProvider, BlazorAuthenticationStateProvider>();
 // Use our custom provider when the app needs an AuthenticationStateProvider
@@ -63,3 +66,14 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
 
 app.Run();
+
+public class AuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
+{
+    //Seems to fix the issue with 404 when navigating directly to pages that require auth.
+    //This will properly redirect to the login page if not authorized. 
+    //https://stackoverflow.com/questions/77693596/unexpected-authorization-behaviour-in-a-blazor-web-app-with-net-8
+    public Task HandleAsync(RequestDelegate next, HttpContext context, AuthorizationPolicy policy, PolicyAuthorizationResult authorizeResult)
+    {
+        return next(context);
+    }
+}

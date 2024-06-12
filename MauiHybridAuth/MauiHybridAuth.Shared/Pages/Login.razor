@@ -6,11 +6,7 @@
 
 <h3>Login to Access Application</h3>
 
-<!-- The rendermode is set to null (none) in the App.razor for this page on the Blazor Web app.
-    It uses a regular postback so the AuthStateProvider can use the SignInManager to sign in on the server.
-    For the MAUI app, the AuthStateProvider uses the HttpClient to sign in on the server.
--->
-<EditForm Model="LoginModel" method="post" OnValidSubmit="LoginUser" FormName="login">
+<EditForm Model="LoginModel" OnValidSubmit="LoginUser" FormName="login">
     <DataAnnotationsValidator />
     <ValidationSummary />
     <div class="alert alert-danger" hidden="@loginFailureHidden">
@@ -30,7 +26,7 @@
 </EditForm>
 
 @code {    
-    [SupplyParameterFromForm]
+    
     private LoginModel LoginModel { get; set; } = new();
     private bool loginFailureHidden = true;
 
