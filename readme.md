@@ -19,7 +19,7 @@ This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that 
 
 ## Tour of the important parts
 ### Shared UI 
-The shared UI is in the `MauiHybridAuth.Shared` project. This project contains the Razor components that are shared between the MAUI and Web projects. The `Routes.razor` uses the `AuthorizeRouteView` to route users to the appropriately based on their authentication status. If a user is not authenticated, they are redirected to the `Login` page. 
+The shared UI is in the `MauiHybridAuth.Shared` project. This project contains the Razor components that are shared between the MAUI and Web projects. The `Routes.razor` uses the `AuthorizeRouteView` to route users appropriately based on their authentication status. If a user is not authenticated, they are redirected to the `Login` page. 
 
 ```code
 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
@@ -32,7 +32,7 @@ The shared UI is in the `MauiHybridAuth.Shared` project. This project contains t
 </AuthorizeRouteView>  
 ```
 
-The `NavManu.razor` component is the main layout for the app and contains the navigation menu that uses `AuthorizationView` to show/hide links based on the user's authentication status.
+The `NavManu.razor` component contains the navigation menu that uses `AuthorizationView` to show/hide links based on the user's authentication status.
 
 ```code
 <AuthorizeView>
@@ -82,17 +82,6 @@ public interface ICustomAuthenticationStateProvider
 The derived class `MauiAuthenticationStateProvider` is used in the MAUI project and handles calling localhost via the emulators and simulators for easy testing. See the [official documentation](https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services) for information on what you need to do to be able to call local services from emulators and simulators.
 This class could also use the `SecureStorage` API to store the user's token securely on the device, or handle any other platform specific functionality if needed.
 
-### Web Program.cs 
-The `Web` project's `Program.cs` file is where the Identity endpoints are set up and the `BlazorAuthenticationStateProvider` (derived from `CustomAuthenticationStateProvider`) is registered with the DI container. This sample uses an in-memory database for simplicity but you can easily swap this out for a real database. See the [official documentation](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-8.0) for more information on setting up ASP.NET Core Identity endpoints.
-
-```code
-// This is our custom provider
-builder.Services.AddScoped<ICustomAuthenticationStateProvider, BlazorAuthenticationStateProvider>();
-// Use our custom provider when the app needs an AuthenticationStateProvider
-builder.Services.AddScoped<AuthenticationStateProvider>(s
-    => (BlazorAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
-```
-
 ### MAUI MauiProgram.cs
 The `Maui` project's `MauiProgram.cs` file is where the `MauiAuthenticationStateProvider` is registered with the DI container. It also needs to register the Authorization core components where things like `AuthorizeView` are defined.
 
@@ -104,6 +93,16 @@ builder.Services.AddScoped<ICustomAuthenticationStateProvider, MauiAuthenticatio
 // Use our custom provider when the app needs an AuthenticationStateProvider
 builder.Services.AddScoped<AuthenticationStateProvider>(s 
     => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
+```
+### Web Program.cs 
+The `Web` project's `Program.cs` file is where the Identity endpoints are set up and the `BlazorAuthenticationStateProvider` (derived from `CustomAuthenticationStateProvider`) is registered with the DI container. This sample uses an in-memory database for simplicity but you can easily swap this out for a real database. See the [official documentation](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-8.0) for more information on setting up ASP.NET Core Identity endpoints.
+
+```code
+// This is our custom provider
+builder.Services.AddScoped<ICustomAuthenticationStateProvider, BlazorAuthenticationStateProvider>();
+// Use our custom provider when the app needs an AuthenticationStateProvider
+builder.Services.AddScoped<AuthenticationStateProvider>(s
+    => (BlazorAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 ```
 
 ## A note on setting up a blank solution 
