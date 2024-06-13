@@ -95,7 +95,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(s
     => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 ```
 ### Web Program.cs 
-The `Web` project's `Program.cs` file is where the Identity endpoints are set up and the `BlazorAuthenticationStateProvider` (derived from `CustomAuthenticationStateProvider`) is registered with the DI container. This sample uses an in-memory database for simplicity but you can easily swap this out for a real database. See the [official documentation](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-8.0) for more information on setting up ASP.NET Core Identity endpoints.
+The Web project's `Program.cs` file is where the Identity endpoints are set up and the `BlazorAuthenticationStateProvider` (derived from `CustomAuthenticationStateProvider`) is registered with the DI container. This sample uses an in-memory database for simplicity but you can easily swap this out for a real database. See the [official documentation](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-8.0) for more information on setting up ASP.NET Core Identity endpoints.
 
 ```code
 // This is our custom provider
