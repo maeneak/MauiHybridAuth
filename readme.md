@@ -83,7 +83,7 @@ The derived class `MauiAuthenticationStateProvider` is used in the MAUI project 
 This class could also use the `SecureStorage` API to store the user's token securely on the device, or handle any other platform specific functionality if needed.
 
 ### MAUI MauiProgram.cs
-The `Maui` project's `MauiProgram.cs` file is where the `MauiAuthenticationStateProvider` is registered with the DI container. It also needs to register the Authorization core components where things like `AuthorizeView` are defined.
+The MAUI project's `MauiProgram.cs` file is where the `MauiAuthenticationStateProvider` is registered with the DI container. It also needs to register the Authorization core components where things like `AuthorizeView` are defined.
 
 ```code
  // This is the core functionality
