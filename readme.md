@@ -5,7 +5,7 @@ This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that 
 ## Running the sample
 1. Clone the repository.
 1. Make sure you have .NET 8 installed and the MAUI workload.
-1. Open the solution in Visual Studio 2022.
+1. Open the solution in Visual Studio 2022 or VS Code with the .NET MAUI extension installed.
 1. Set the `MauiHybridAuth` MAUI project as the startup project.
 1. Start the `MauiHybridAuth.Web` project without debugging.
 1. Navigate to `https://localhost:7157/swagger` in your browser to pull up the identity endpoints.
