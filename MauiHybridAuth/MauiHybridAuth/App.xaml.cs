@@ -4,9 +4,11 @@
     {
         public App()
         {
-            InitializeComponent();
-
-            MainPage = new MainPage();
+            InitializeComponent();            
+        }
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+            return new Window(new MainPage()) { Title = "MauiHybridAuth" };
         }
     }
 }

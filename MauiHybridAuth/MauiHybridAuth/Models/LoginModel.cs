@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MauiHybridAuth.Shared.Models
+namespace MauiHybridAuth.Models
 {
     public class LoginModel
     {

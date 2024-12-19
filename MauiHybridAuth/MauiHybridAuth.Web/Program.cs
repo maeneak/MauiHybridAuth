@@ -1,6 +1,8 @@
 using MauiHybridAuth.Shared.Services;
 using MauiHybridAuth.Web.Components;
 using MauiHybridAuth.Web.Services;
+using MauiHybridAuth.Web.Data;
+using MauiHybridAuth.Web.Components.Account;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -16,44 +18,58 @@ builder.Services.AddRazorComponents()
 // Add device-specific services used by the MauiHybridAuth.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
-// Identity services
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+// Add Auth services used by the Web app
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<IdentityUserAccessor>();
+builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+});
+ 
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+//Needed for external clients to log in
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-//TODO: Add real DB later
-builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseInMemoryDatabase("AppDb"));
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication();
-
-// Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //Register needed elements for authentication:
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
-// This is our custom provider
-builder.Services.AddScoped<ICustomAuthenticationStateProvider, BlazorAuthenticationStateProvider>();
-// Use our custom provider when the app needs an AuthenticationStateProvider
-builder.Services.AddScoped<AuthenticationStateProvider>(s
-    => (BlazorAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 
 var app = builder.Build();
-app.MapIdentityApi<IdentityUser>();
+
+//Needed for external clients to log in
+app.MapIdentityApi<ApplicationUser>();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+    app.UseSwagger();
+    app.UseSwaggerUI();    
+}
+else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-}
-else
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -61,19 +77,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
 
-app.Run();
+app.MapAdditionalIdentityEndpoints();
 
-public class AuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
-{
-    //Seems to fix the issue with 404 when navigating directly to pages that require auth.
-    //This will properly redirect to the login page if not authorized. 
-    //https://stackoverflow.com/questions/77693596/unexpected-authorization-behaviour-in-a-blazor-web-app-with-net-8
-    public Task HandleAsync(RequestDelegate next, HttpContext context, AuthorizationPolicy policy, PolicyAuthorizationResult authorizeResult)
-    {
-        return next(context);
-    }
-}
+app.Run();

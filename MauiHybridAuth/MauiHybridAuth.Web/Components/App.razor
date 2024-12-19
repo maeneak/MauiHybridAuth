@@ -9,12 +9,20 @@
     <link rel="stylesheet" href="_content/MauiHybridAuth.Shared/app.css" />
     <link rel="stylesheet" href="MauiHybridAuth.Web.styles.css" />
     <link rel="icon" type="image/png" href="_content/MauiHybridAuth.Shared/favicon.png" />
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    <Routes @rendermode="PageRenderMode" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}
