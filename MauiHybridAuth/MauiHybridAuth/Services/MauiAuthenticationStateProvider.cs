@@ -18,15 +18,19 @@ namespace MauiHybridAuth.Services
         public LoginStatus LoginStatus { get; set; }
         Task<AuthenticationState> GetAuthenticationStateAsync();
         Task LogInAsync(LoginModel loginModel);
+        Task RegisterAsync(LoginModel loginModel);
+        Task ConfirmEmailAsync(string email, string token);
         void Logout();
     }
     public class MauiAuthenticationStateProvider : AuthenticationStateProvider, ICustomAuthenticationStateProvider
     {
         //TODO: Place this in AppSettings or Client config file
         protected string LoginUri { get; set; } = "https://localhost:7157/login";
+        protected string RegisterUri { get; set; } = "https://localhost:7157/register";
+        protected string ConfirmEmailUri { get; set; } = "https://localhost:7157/confirmEmail";
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
-        protected ClaimsPrincipal currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+        protected ClaimsPrincipal currentUser = new(new ClaimsIdentity());
 
         public MauiAuthenticationStateProvider()
         {
@@ -34,14 +38,18 @@ namespace MauiHybridAuth.Services
             //Android Emulator uses 10.0.2.2 to refer to localhost            
             LoginUri =
                 DeviceInfo.Platform == DevicePlatform.Android ? LoginUri.Replace("localhost", "10.0.2.2") : LoginUri;
+            RegisterUri =
+                DeviceInfo.Platform == DevicePlatform.Android ? RegisterUri.Replace("localhost", "10.0.2.2") : RegisterUri;
+            ConfirmEmailUri =
+                DeviceInfo.Platform == DevicePlatform.Android ? ConfirmEmailUri.Replace("localhost", "10.0.2.2") : ConfirmEmailUri;
         }
 
         private HttpClient GetHttpClient()
         {
 #if WINDOWS || MACCATALYST
-            return new HttpClient();
+                return new HttpClient();
 #else
-            return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler()); 
+            return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler());
 #endif
         }
 
@@ -63,13 +71,66 @@ namespace MauiHybridAuth.Services
                 return new AuthenticationState(currentUser);
             }
         }
+
+        public async Task RegisterAsync(LoginModel loginModel)
+        {
+            try
+            {
+                var httpClient = GetHttpClient();
+                var registerData = new { loginModel.Email, loginModel.Password };
+                var response = await httpClient.PostAsJsonAsync(RegisterUri, registerData);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await LoginWithProviderAsync(loginModel);
+                    currentUser = user;
+                    LoginStatus = LoginStatus.Success;
+                }
+                else
+                {
+                    LoginStatus = LoginStatus.Failed;
+                    currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error registering: {ex}");
+                LoginStatus = LoginStatus.Failed;
+                currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+            }
+
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(currentUser)));
+        }
+
+        public async Task ConfirmEmailAsync(string email, string token)
+        {
+            try
+            {
+                var httpClient = GetHttpClient();
+                var response = await httpClient.GetAsync($"{ConfirmEmailUri}?email={email}&token={token}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine("Email confirmed successfully.");
+                }
+                else
+                {
+                    Debug.WriteLine("Email confirmation failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error confirming email: {ex}");
+            }
+        }
+
         public void Logout()
         {
             LoginStatus = LoginStatus.None;
             currentUser = new ClaimsPrincipal(new ClaimsIdentity());
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(currentUser)));
         }
-                  
+
         private async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginModel loginModel)
         {
             ClaimsPrincipal authenticatedUser;
@@ -96,7 +157,7 @@ namespace MauiHybridAuth.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error logging in: {ex.ToString()}");
+                Debug.WriteLine($"Error logging in: {ex}");
                 authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
             }
 
@@ -110,30 +171,32 @@ namespace MauiHybridAuth.Services
         public HttpMessageHandler GetPlatformMessageHandler()
         {
 #if ANDROID
-            var handler = new Xamarin.Android.Net.AndroidMessageHandler();
-            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+                var handler = new Xamarin.Android.Net.AndroidMessageHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+                    {
+                        if (cert != null && cert.Issuer.Equals("CN=localhost"))
+                            return true;
+                        return errors == System.Net.Security.SslPolicyErrors.None;
+                    }
+                };
+                return handler;
+#elif IOS
+            var handler = new NSUrlSessionHandler
             {
-                if (cert != null && cert.Issuer.Equals("CN=localhost"))
-                    return true;
-                return errors == System.Net.Security.SslPolicyErrors.None;
+                TrustOverrideForUrl = IsHttpsLocalhost
             };
             return handler;
-#elif IOS
-        var handler = new NSUrlSessionHandler
-        {
-            TrustOverrideForUrl = IsHttpsLocalhost
-        };
-        return handler;
 #else
-            throw new PlatformNotSupportedException("Only Android and iOS supported.");
+                throw new PlatformNotSupportedException("Only Android and iOS supported.");
 #endif
         }
 
 #if IOS
-    public bool IsHttpsLocalhost(NSUrlSessionHandler sender, string url, Security.SecTrust trust)
-    {
-        return url.StartsWith("https://localhost");
-    }
+        public bool IsHttpsLocalhost(NSUrlSessionHandler sender, string url, Security.SecTrust trust)
+        {
+            return url.StartsWith("https://localhost");
+        }
 #endif
     }
 

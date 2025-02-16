@@ -7,12 +7,13 @@ namespace MauiHybridAuth.Models
         [Required]
         [Display(Name = "Email Address")]
         [EmailAddress]
-        public required string Email { get; set; }
+        public string? Email { get; set; } = string.Empty;
 
-        [Required]        
-        public required string Password { get; set; }
+        [Required]
+        public string Password { get; set; } = string.Empty;
 
         public string LoginFailureMessage { get; set; } = "Invalid Email or Password. Please try again.";
-        
+        public string RegisterFailureMessage { get; set; } = "Invalid Email or Password. Please try again.";
+
     }
 }
