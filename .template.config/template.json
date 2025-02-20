@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "maeneak",
+  "classifications": [
+    "Web",
+    "ASP.NET"
+  ],
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "identity": "Maeneak.MauiHybridAuth",
+  "name": "MAUI Hybrid + Blazor Auth",
+  "shortName": "maui-auth",
+  "sourceName": "MauiHybridAuth",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            ".gitignore",
+            ".gitattributes"
+          ]
+        }
+      ]
+    }
+  ]
+}
