@@ -20,9 +20,9 @@
         {
           "exclude": [
             ".gitignore",
-            ".vs",
-            ".github",
-            ".git",
+            ".vs/**/*",
+            ".github/**/*",
+            ".git/**/*",
             ".gitattributes"
           ]
         }
