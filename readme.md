@@ -1,19 +1,13 @@
 # .NET MAUI Blazor Hybrid and Web App Auth Template
-This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that shares common UI and also provides *authentication*. It uses ASP.NET Core Identity local accounts but you can use this pattern for any authentication provider you need to call from a MAUI Blazor Hybrid client.
+Fork with added template for the Microsft MAUI Hybrid with Blazor Identity sample.
+This project demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that shares common UI and also provides *authentication*. It uses ASP.NET Core Identity local accounts but you can use this pattern for any authentication provider you need to call from a MAUI Blazor Hybrid client.
 
-## Running the sample
+## Installing and using the template
 1. Clone the repository.
 1. Make sure you have [.NET 9 installed and the MAUI workload](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation?view=net-maui-9.0&tabs=vswin).
-1. Open the solution in Visual Studio 2022 or VS Code with the .NET MAUI extension installed. 
-1. Set the `MauiHybridAuth` MAUI project as the startup project.
+1. Open and terminal in the root folder and type ```dotnet new install .```
+1. Create a new project in your repo directory from the terminal using ```dotnet new maui-auth -n {name of project}```
 1. Start the `MauiHybridAuth.Web` project without debugging (in Visual Studio right-click on the project and select "Debug -> Start without Debugging").
-1. Register a user in the Blazor Web app UI or navigate to `https://localhost:7157/swagger` in your browser to pull up the identity endpoints and register a user using the `/Register` endpoint.
-1. Start (F5) the `MauiHybridAuth` MAUI project. You can set the debug target to Windows, or an Android device or emulator.
-1. Notice you can only see the Home and Login pages.
-1. Log in with the user you registered.
-1. Notice you can now see the shared Counter and Weather pages.
-1. Log out and notice you can only see the Home and Login pages again.
-1. Navigate the web app to `https://localhost:7157/` and the app will behave the same.
 
 ## Tour of the important parts
 ### Shared UI 
