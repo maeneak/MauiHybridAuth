@@ -1,5 +1,6 @@
 # .NET MAUI Blazor Hybrid and Web App Auth Template
 Fork with added template for the Microsft MAUI Hybrid with Blazor Identity sample.
+
 This project demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that shares common UI and also provides *authentication*. It uses ASP.NET Core Identity local accounts but you can use this pattern for any authentication provider you need to call from a MAUI Blazor Hybrid client.
 
 ## Installing and using the template
