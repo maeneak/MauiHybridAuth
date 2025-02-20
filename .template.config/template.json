@@ -20,6 +20,9 @@
         {
           "exclude": [
             ".gitignore",
+            ".vs",
+            ".github",
+            ".git",
             ".gitattributes"
           ]
         }
