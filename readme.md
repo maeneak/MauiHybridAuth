@@ -6,9 +6,8 @@ This project demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that
 ## Installing and using the template
 1. Clone the repository.
 1. Make sure you have [.NET 9 installed and the MAUI workload](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation?view=net-maui-9.0&tabs=vswin).
-1. Open and terminal in the root folder and type ```dotnet new install .```
+1. Open a terminal in the root folder and type ```dotnet new install .```
 1. Create a new project in your repo directory from the terminal using ```dotnet new maui-auth -n {name of project}```
-1. Start the `MauiHybridAuth.Web` project without debugging (in Visual Studio right-click on the project and select "Debug -> Start without Debugging").
 
 ## Tour of the important parts
 ### Shared UI 
