@@ -21,7 +21,12 @@
     <div class="form-group mt-1">
         <button type="submit" class="btn btn-primary w-100">Login Now</button>
     </div>
+
 </EditForm>
+
+<div class="mt-2">
+    <NavLink href="" @onclick="Register">Register New Account...</NavLink>
+</div>
 
 @code {    
     
@@ -47,5 +52,10 @@
         }        
         
         Navigation.NavigateTo(""); //Root URL
+    }
+
+    private async Task Register()
+    {
+        await AuthStateProvider.RegisterAsync("");
     }
 }
