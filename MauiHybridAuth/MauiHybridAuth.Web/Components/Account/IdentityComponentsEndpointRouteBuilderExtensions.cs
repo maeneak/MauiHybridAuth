@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using System.Text.Json;
 using MauiHybridAuth.Web.Components.Account.Pages;
 using MauiHybridAuth.Web.Components.Account.Pages.Manage;
 using MauiHybridAuth.Web.Data;
@@ -9,6 +7,8 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace Microsoft.AspNetCore.Routing
 {
@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Routing
 
             accountGroup.MapPost("/Logout", async (
                 ClaimsPrincipal user,
-                [FromServices] SignInManager<ApplicationUser> signInManager,
+                SignInManager<ApplicationUser> signInManager,
                 [FromForm] string returnUrl) =>
             {
                 await signInManager.SignOutAsync();

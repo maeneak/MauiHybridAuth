@@ -1,10 +1,10 @@
 using MauiHybridAuth.Shared.Services;
 using MauiHybridAuth.Web.Components;
-using MauiHybridAuth.Web.Services;
-using MauiHybridAuth.Web.Data;
 using MauiHybridAuth.Web.Components.Account;
-using Microsoft.AspNetCore.Authorization.Policy;
+using MauiHybridAuth.Web.Data;
+using MauiHybridAuth.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
 builder.Services.AddMudServices();
 
 // Add device-specific services used by the MauiHybridAuth.Shared project
@@ -36,7 +37,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 });
- 
+
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
@@ -71,7 +72,7 @@ if (app.Environment.IsDevelopment())
     }
     app.UseMigrationsEndPoint();
     app.UseSwagger();
-    app.UseSwaggerUI();    
+    app.UseSwaggerUI();
 }
 else
 {
