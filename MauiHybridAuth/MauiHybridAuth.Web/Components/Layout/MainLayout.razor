@@ -1,15 +1,20 @@
-﻿@inherits LayoutComponentBase
-
-<MudThemeProvider />
-<MudPopoverProvider />
+﻿@using MauiHybridAuth.Shared.Theme
+@inherits LayoutComponentBase
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@CustomAppTheme.DarkMode"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
+
+
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        <MudStack Row="true">
+            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+            <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@modeIcon" />
+        </MudStack>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
@@ -27,7 +32,36 @@
 </div>
 
 @code {
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+    [CascadingParameter]
+    private CustomAppTheme? CustomAppTheme { get; set; }
+
     private bool _drawerOpen = true;
+    private MudThemeProvider _mudThemeProvider;
+    private string modeIcon => CustomAppTheme.DarkMode ? @Icons.Material.Outlined.DarkMode : @Icons.Material.Outlined.LightMode;
+
+    void ToggleDarkMode()
+    {
+        CustomAppTheme.DarkMode = !CustomAppTheme.DarkMode;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            CustomAppTheme.SystemDarkMode = await _mudThemeProvider.GetSystemPreference();
+            CustomAppTheme.DarkMode = CustomAppTheme.SystemDarkMode;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSystemPreferenceChanged(bool newValue)
+    {
+        CustomAppTheme.SystemDarkMode = newValue;
+        StateHasChanged();
+    }
 
     private void DrawerToggle()
     {

@@ -3,14 +3,11 @@
 <Router AppAssembly="typeof(Program).Assembly"
         AdditionalAssemblies="new[] { typeof(Shared._Imports).Assembly }">
     <Found Context="routeData">
-       <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
-            <Authorizing>
-                Authorizing...
-            </Authorizing>
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
                 <Login />
             </NotAuthorized>
-        </AuthorizeRouteView>   
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
