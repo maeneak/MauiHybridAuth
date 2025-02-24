@@ -11,7 +11,9 @@
     width: 80%;
     margin: auto;
     height: 100vh;
-    justify-content: center;}
+    justify-content: center;
+    background-color: rgba(55,55,64,1);
+    }
 </style>
 
 @if (HttpContext is null)
@@ -20,7 +22,9 @@
 }
 else
 {
-    @Body
+    <MudPaper Elevation="2" Class="pl-6 pr-6 pb-6 pt-3 bodydiv" style="max-width:1080px">
+        @Body
+    </MudPaper>
 }
 
 @code {
