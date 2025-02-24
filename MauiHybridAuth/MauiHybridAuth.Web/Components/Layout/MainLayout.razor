@@ -1,6 +1,5 @@
 ﻿@using MauiHybridAuth.Shared.Theme
 @inherits LayoutComponentBase
-<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@CustomAppTheme.DarkMode"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
@@ -8,16 +7,34 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => NavDrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
-        <MudStack Row="true">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
-            <MudIconButton @onclick="ToggleDarkMode" Color="Color.Inherit" Icon="@modeIcon" />
+            <AuthorizeView>
+                <Authorized>
+                    <MudBadge Color="Color.Success" Overlap="true" Bordered="true">
+                        <MudAvatar @onclick="@((e) => ProfileDrawerToggle())">
+                            @context.User.Identity?.Name
+                        </MudAvatar>
+                    </MudBadge>
+                </Authorized>
+                <NotAuthorized>
+                    <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
+                        <MudAvatar @onclick="@((e) => ProfileDrawerToggle())">
+                            X
+                        </MudAvatar>
+                    </MudBadge>
+                </NotAuthorized>
+            </AuthorizeView>
         </MudStack>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
+    </MudDrawer>
+    <MudDrawer Class="pa-5" @bind-Open="_profileDrawerOpen" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" >
+        <ProfileMenu />
     </MudDrawer>
     <MudMainContent Class="mt-16 pa-4">
         @Body
@@ -38,34 +55,22 @@
     [CascadingParameter]
     private CustomAppTheme? CustomAppTheme { get; set; }
 
-    private bool _drawerOpen = true;
-    private MudThemeProvider _mudThemeProvider;
-    private string modeIcon => CustomAppTheme.DarkMode ? @Icons.Material.Outlined.DarkMode : @Icons.Material.Outlined.LightMode;
+    private bool _navDrawerOpen = true;
+    private bool _profileDrawerOpen = false;
 
     void ToggleDarkMode()
     {
-        CustomAppTheme.DarkMode = !CustomAppTheme.DarkMode;
+        //CustomAppTheme.InDarkMode = !CustomAppTheme.InDarkMode;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void NavDrawerToggle()
     {
-        if (firstRender)
-        {
-            CustomAppTheme.SystemDarkMode = await _mudThemeProvider.GetSystemPreference();
-            CustomAppTheme.DarkMode = CustomAppTheme.SystemDarkMode;
-            StateHasChanged();
-        }
+        _navDrawerOpen = !_navDrawerOpen;
     }
 
-    private async Task OnSystemPreferenceChanged(bool newValue)
+    private void ProfileDrawerToggle()
     {
-        CustomAppTheme.SystemDarkMode = newValue;
-        StateHasChanged();
-    }
-
-    private void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
+        _profileDrawerOpen = !_profileDrawerOpen;
     }
 
 }
