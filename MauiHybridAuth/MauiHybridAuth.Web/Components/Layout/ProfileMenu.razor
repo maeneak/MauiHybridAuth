@@ -1,0 +1,31 @@
+﻿@using MauiHybridAuth.Shared.Theme
+<MudThemeProvider @bind-IsDarkMode="@CustomAppTheme.InDarkMode" />
+
+<MudStack>
+    <MudSelect @bind-Value="CustomAppTheme.CurrentMode" Variant="Variant.Text" Style="width:150px">
+        <MudSelectItem Value="ThemeColorMode.System" Style="vertical-align:middle">
+            <MudStack Row>
+                <MudIcon Icon="@Icons.Material.Outlined.SettingsPower" />
+                <MudText>System</MudText>
+            </MudStack>
+        </MudSelectItem>
+        <MudSelectItem Value="ThemeColorMode.Light">
+            <MudStack Row>
+                <MudIcon Icon="@Icons.Material.Outlined.LightMode" />
+                <MudText>Light</MudText>
+            </MudStack>
+        </MudSelectItem>
+        <MudSelectItem Value="ThemeColorMode.Dark">
+            <MudStack Row>
+                <MudIcon Icon="@Icons.Material.Outlined.DarkMode" />
+                <MudText>Dark</MudText>
+            </MudStack>
+        </MudSelectItem>
+    </MudSelect>
+</MudStack>
+
+@code {
+    [CascadingParameter]
+    private CustomAppTheme? CustomAppTheme { get; set; }
+
+}
