@@ -36,6 +36,7 @@ namespace MauiHybridAuth.Services
 
         public MauiAuthenticationStateProvider()
         {
+#if DEBUG
             //See: https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services
             //Android Emulator uses 10.0.2.2 to refer to localhost            
             if (DeviceInfo.Platform == DevicePlatform.Android)
@@ -43,9 +44,10 @@ namespace MauiHybridAuth.Services
                 _loginUri = _loginUri.Replace("localhost", "10.0.2.2");
                 _refreshUri = _refreshUri.Replace("localhost", "10.0.2.2");
             }
-        }       
+#endif
+        }
 
-        private HttpClient GetHttpClient()
+        private static HttpClient GetHttpClient()
         {
 #if WINDOWS || MACCATALYST
             return new HttpClient();
@@ -93,7 +95,7 @@ namespace MauiHybridAuth.Services
             try
             {
                 //Call the Login endpoint and pass the email and password
-                var httpClient = GetHttpClient();
+                var httpClient = MauiAuthenticationStateProvider.GetHttpClient();
                 var loginData = new { loginModel.Email, loginModel.Password };
                 var response = await httpClient.PostAsJsonAsync(_loginUri, loginData);
 
@@ -174,7 +176,7 @@ namespace MauiHybridAuth.Services
                 if (refreshToken != null)
                 {
                     //Call the Refresh endpoint and pass the refresh token
-                    var httpClient = GetHttpClient();
+                    var httpClient = MauiAuthenticationStateProvider.GetHttpClient();
                     var refreshData = new { refreshToken };
                     var response = await httpClient.PostAsJsonAsync(_refreshUri, refreshData);
                     if (response.IsSuccessStatusCode)
