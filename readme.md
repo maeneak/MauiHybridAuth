@@ -8,7 +8,7 @@ This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that 
 1. Set the `MauiHybridAuth` MAUI project as the startup project.
 1. Start the `MauiHybridAuth.Web` project without debugging (in Visual Studio right-click on the project and select "Debug -> Start without Debugging").
 1. Register a user in the Blazor Web app UI or navigate to `https://localhost:7157/swagger` in your browser to pull up the identity endpoints and register a user using the `/Register` endpoint.
-1. Start (F5) the `MauiHybridAuth` MAUI project. You can set the debug target to Windows, or an Android device or emulator.
+1. Start (F5) the `MauiHybridAuth` MAUI project. You can set the debug target to Windows or an Android emulator.
 1. Notice you can only see the Home and Login pages.
 1. Log in with the user you registered.
 1. Notice you can now see the shared Counter and Weather pages.
@@ -123,7 +123,9 @@ public interface ICustomAuthenticationStateProvider
     void Logout();
 }
 ```
-This class also handles calling localhost via the emulators and simulators for easy testing. See the [official documentation](https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services) for information on what you need to do to be able to call local services from emulators and simulators. This class could also use the `SecureStorage` API to store the user's token securely on the device, or handle any other platform specific functionality if needed.
+This class also handles calling localhost via the emulators and simulators for easy testing. See the [official documentation](https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services) for information on what you need to do to be able to call local services from emulators and simulators. 
+
+This class also uses the [`SecureStorage` API](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage?view=net-maui-9.0) to store the user's token securely on the device, and refreshes the token if it's almost expired so the user doesn't have to login every time.  
 
 ### MAUI MauiProgram.cs
 The MAUI project's `MauiProgram.cs` file is where the `MauiAuthenticationStateProvider` is registered with the DI container. It also needs to register the Authorization core components where things like `AuthorizeView` are defined.
