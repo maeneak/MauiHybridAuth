@@ -16,25 +16,45 @@
 
 <StatusMessage />
 
-<EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+<EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post" enctype="multipart/form-data">
     <DataAnnotationsValidator />
 
     <MudGrid>
-        <MudItem md="12">
+        <MudItem xs="12" Style="text-align:left">
+            <MudStack Row >
+                @if (Input.ProfilePictureBytes == null || Input.ProfilePictureBytes.Length == 0)
+                {
+                    <img id="profilePicture" style="width:100px;height:100px; object-fit:cover" src="_content/MauiHybridAuth.Shared/img/profile.png">
+                }
+                else
+                {
+                    <img id="profilePicture" style="width:100px;height:100px; object-fit:cover" src="data:image /*;base64,@(Convert.ToBase64String(Input.ProfilePictureBytes))">
+                }
+                <InputFile type="file"
+                accept=",.jpg,.jpeg,.gif,.tif"
+                asp-for="Input.ProfilePicture"
+                name="Input.ProfilePicture"
+                class="form-control"
+                oninput="document.getElementById('profilePicture').src = window.URL.createObjectURL(this.files[0])"
+                style="border:0px!important;padding: 0px;padding-top: 10px;padding-bottom: 30px;"/>
+                <span asp-validation-for="Input.ProfilePicture" class="text-danger"></span>
+            </MudStack>
+        </MudItem>
+        <MudItem xs="12" md="6">
             <MudStaticTextField For="@(() => Input.GivenName)" @bind-Value="Input.GivenName" Label="First name" Placeholder="Please enter your first name." />
         </MudItem>
-        <MudItem md="12">
+        <MudItem xs="12" md="6">
             <MudStaticTextField For="@(() => Input.Surname)" @bind-Value="Input.Surname" Label="Last name" Placeholder="Please enter your last name." />
         </MudItem>
-        <MudItem md="12">
+        <MudItem xs="12" md="6">
             <MudStaticTextField Value="@username" Label="Username" Disabled="true" Placeholder="Please choose your username." />
         </MudItem>
-        <MudItem md="12">
+        <MudItem xs="12" md="6">
             <MudStaticTextField For="@(() => Input.PhoneNumber)" @bind-Value="Input.PhoneNumber"
-                                Label="Phone Number" HelperText="Please enter your phone number."
-                                UserAttributes="@(new() { { "autocomplete", "tel-national" } } )" />
+            Label="Phone Number" HelperText="Please enter your phone number."
+            UserAttributes="@(new() { { "autocomplete", "tel-national" } } )" />
         </MudItem>
-        <MudItem md="12">
+        <MudItem xs="12" md="3" Style="text-align:right">
             <MudStaticButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" FormAction="FormAction.Submit">Save</MudStaticButton>
         </MudItem>
     </MudGrid>
@@ -44,12 +64,29 @@
     private ApplicationUser user = default!;
     private string? username;
     private string? phoneNumber;
-
+    private IReadOnlyDictionary<string, object> formParams = new Dictionary<string, object> { { "enctype", "multipart/form-data" } };
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
+
+    private string PictureBase64()
+    {
+        return $"data:image/*;base64,{Convert.ToBase64String(Input.ProfilePictureBytes)}";
+    }
+
+    private void UpdatePictureBytes()
+    {
+        if (Input.ProfilePicture != null)
+        {
+            using (var dataStream = new MemoryStream())
+            {
+                Input.ProfilePicture.CopyTo(dataStream);
+                Input.ProfilePictureBytes = dataStream.ToArray();
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,6 +97,9 @@
         Input.PhoneNumber ??= phoneNumber;
         Input.GivenName ??= user.FirstName;
         Input.Surname ??= user.LastName;
+        if (user.ProfilePicture != null && user.ProfilePicture.Length > 0) {
+            Input.ProfilePictureBytes = user.ProfilePicture;
+        }
     }
 
     private async Task OnValidSubmitAsync()
@@ -74,16 +114,12 @@
         }
         user.FirstName = Input.GivenName!;
         user.LastName = Input.Surname!;
-        // if (Request.Form.Files.Count > 0)
-        // {
-        //     IFormFile file = Request.Form.Files.FirstOrDefault();
-        //     using (var dataStream = new MemoryStream())
-        //     {
-        //         await file.CopyToAsync(dataStream);
-        //         user.ProfilePicture = dataStream.ToArray();
-        //     }
-        //     await _userManager.UpdateAsync(user);
-        // }
+        if (Input.ProfilePicture != null)
+        {
+            UpdatePictureBytes();
+            user.ProfilePicture = Input.ProfilePictureBytes;
+            await UserManager.UpdateAsync(user);
+        }
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
@@ -103,5 +139,11 @@
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }
+
+        [Display(Name = "Profile Picture")]
+        public IFormFile ProfilePicture { get; set; }
+
+        [Display(Name = "Profile Picture Bytes")]
+        public byte[] ProfilePictureBytes { get; set; } = new byte[0];
     }
 }

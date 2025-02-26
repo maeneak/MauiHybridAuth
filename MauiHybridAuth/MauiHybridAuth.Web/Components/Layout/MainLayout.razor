@@ -20,15 +20,29 @@
             <AuthorizeView>
                 <Authorized>
                     <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
-                        <MudAvatar Square="true">
-                            @userInitials
+                        <MudAvatar >
+                            @if(user != null)
+                            {
+                                @if(user.ProfilePicture.Length > 0)
+                                {
+                                    <MudImage Src="@("data:image /*;base64," + Convert.ToBase64String(user.ProfilePicture))"/>
+                                }
+                                else
+                                {
+                                    <MudText>@user.Initials</MudText>
+                                }
+                            }
+                            else
+                            {
+                                <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png"/>
+                            }
                         </MudAvatar>
                     </MudBadge>
                 </Authorized>
                 <NotAuthorized>
                     <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
-                        <MudAvatar Square="true">
-                            X
+                        <MudAvatar>
+                            <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
                         </MudAvatar>
                     </MudBadge>
                 </NotAuthorized>
@@ -61,31 +75,30 @@
 
     private bool _navDrawerOpen = true;
     private bool _profileDrawerOpen = false;
-    private string userInitials = "UU";
+    private ApplicationUser? user;
 
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        await UpdateUserInitials();
+        await UpdateUser();
     }
 
-    private async Task UpdateUserInitials()
+    private async Task UpdateUser()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        userInitials = await GetUserInitials(user);
-        await InvokeAsync(StateHasChanged);
+        if (authState.User == null)
+        {
+            user = null;
+            return;
+        }
+        var userClaim = authState.User;
+        user = await UserManager.GetUserAsync(userClaim);
     }
 
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
-        await UpdateUserInitials();
-    }
-
-    private async Task<string> GetUserInitials(System.Security.Claims.ClaimsPrincipal user)
-    {
-        ApplicationUser? aUser = await UserManager.GetUserAsync(user);
-        return aUser is null ? "UU" : aUser.Initials;
+        await UpdateUser();
+        StateHasChanged();
     }
 
     private void NavDrawerToggle()
