@@ -1,9 +1,15 @@
 ﻿@using MauiHybridAuth.Shared.Theme
+@using MauiHybridAuth.Web.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
-
+<MudThemeProvider @bind-IsDarkMode="@CustomAppTheme.InDarkMode" />
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -11,36 +17,35 @@
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
             <AuthorizeView>
                 <Authorized>
-                    <MudBadge Color="Color.Success" Overlap="true" Bordered="true">
-                        <MudAvatar @onclick="@((e) => ProfileDrawerToggle())">
-                            @context.User.Identity?.Name
+                    <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
+                        <MudAvatar Square="true">
+                            @userInitials
                         </MudAvatar>
                     </MudBadge>
                 </Authorized>
                 <NotAuthorized>
                     <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
-                        <MudAvatar @onclick="@((e) => ProfileDrawerToggle())">
+                        <MudAvatar Square="true">
                             X
                         </MudAvatar>
                     </MudBadge>
                 </NotAuthorized>
             </AuthorizeView>
+            <MudIconButton OnClick="@((e) => ProfileDrawerToggle())" Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
         </MudStack>
     </MudAppBar>
     <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
     </MudDrawer>
-    <MudDrawer Class="pa-5" @bind-Open="_profileDrawerOpen" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" >
+    <MudDrawer Class="pa-5" @bind-Open="_profileDrawerOpen" Variant="@DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" >
         <ProfileMenu />
     </MudDrawer>
     <MudMainContent Class="mt-16 pa-4">
         @Body
     </MudMainContent>
 </MudLayout>
-
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
@@ -49,7 +54,6 @@
 </div>
 
 @code {
-
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
     [CascadingParameter]
@@ -57,10 +61,31 @@
 
     private bool _navDrawerOpen = true;
     private bool _profileDrawerOpen = false;
+    private string userInitials = "UU";
 
-    void ToggleDarkMode()
+    protected override async Task OnInitializedAsync()
     {
-        //CustomAppTheme.InDarkMode = !CustomAppTheme.InDarkMode;
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await UpdateUserInitials();
+    }
+
+    private async Task UpdateUserInitials()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        userInitials = await GetUserInitials(user);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await UpdateUserInitials();
+    }
+
+    private async Task<string> GetUserInitials(System.Security.Claims.ClaimsPrincipal user)
+    {
+        ApplicationUser? aUser = await UserManager.GetUserAsync(user);
+        return aUser is null ? "UU" : aUser.Initials;
     }
 
     private void NavDrawerToggle()
@@ -72,7 +97,4 @@
     {
         _profileDrawerOpen = !_profileDrawerOpen;
     }
-
 }
-
-
