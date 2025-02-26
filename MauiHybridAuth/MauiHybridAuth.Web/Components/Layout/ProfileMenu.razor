@@ -1,11 +1,20 @@
 ﻿@using MauiHybridAuth.Shared.Theme
+@using MauiHybridAuth.Web.Components.Account
 @inject NavigationManager NavigationManager
+@inject IdentityUserAccessor UserAccessor
 
-<MudStack>
+<MudGrid>
+    <AuthorizeView >
+        <Authorized>
+            <MudItem>
+
+            </MudItem>
+        </Authorized>
+    </AuthorizeView>
     <MudSelect Label="Color Mode" @bind-Value="CustomAppTheme!.CurrentMode" 
-        Dense="true"
-        Variant="Variant.Text" Style="width:150px" 
-        SelectedValuesChanged="@((IEnumerable<ThemeColorMode> e) => OnColorModeChanged(e))">
+    Dense="true"
+    Variant="Variant.Text" Style="width:150px" 
+    SelectedValuesChanged="@((IEnumerable<ThemeColorMode> e) => OnColorModeChanged(e))">
         <MudSelectItem Value="ThemeColorMode.System" Style="vertical-align:middle">
             <MudStack Row>
                 <MudIcon Icon="@Icons.Material.Outlined.SettingsPower" />
@@ -25,11 +34,16 @@
             </MudStack>
         </MudSelectItem>
     </MudSelect>
-</MudStack>
+</MudGrid>
 
 @code {
     [CascadingParameter]
     private CustomAppTheme? CustomAppTheme { get; set; }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        return base.OnAfterRenderAsync(firstRender);
+    }
 
     private void OnColorModeChanged(IEnumerable<ThemeColorMode> args)
     {

@@ -1,0 +1,101 @@
+﻿@page "/Account/Manage2"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using MauiHybridAuth.Web.Data
+@using System.Security.Claims
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Profile</PageTitle>
+
+<MudText Typo="Typo.h6" GutterBottom="true">Profile</MudText>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="Details" >
+        <Index />
+    </MudTabPanel>
+    <MudTabPanel >
+        <TabContent>
+
+        </TabContent>
+    </MudTabPanel>
+    <MudTabPanel Text="Password">
+        <ChangePassword />
+    </MudTabPanel>
+    <MudTabPanel Text="2FA Setup">
+        <TwoFactorAuthentication />
+    </MudTabPanel>
+    <MudTabPanel Text="Delete Account">
+        <PersonalData />
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? phoneNumber;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+
+        Input.PhoneNumber ??= phoneNumber;
+        Input.GivenName ??= user.FirstName;
+        Input.Surname ??= user.LastName;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (Input.PhoneNumber != phoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            }
+        }
+        user.FirstName = Input.GivenName!;
+        user.LastName = Input.Surname!;
+        // if (Request.Form.Files.Count > 0)
+        // {
+        //     IFormFile file = Request.Form.Files.FirstOrDefault();
+        //     using (var dataStream = new MemoryStream())
+        //     {
+        //         await file.CopyToAsync(dataStream);
+        //         user.ProfilePicture = dataStream.ToArray();
+        //     }
+        //     await _userManager.UpdateAsync(user);
+        // }
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "First name")]
+        public string? GivenName { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Last name")]
+        public string? Surname { get; set; }
+
+        [Phone]
+        [Display(Name = "Phone number")]
+        public string? PhoneNumber { get; set; }
+    }
+}
