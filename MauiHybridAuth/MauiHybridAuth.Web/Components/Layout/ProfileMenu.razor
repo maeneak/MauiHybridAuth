@@ -1,8 +1,11 @@
 ﻿@using MauiHybridAuth.Shared.Theme
-<MudThemeProvider @bind-IsDarkMode="@CustomAppTheme.InDarkMode" />
+@inject NavigationManager NavigationManager
 
 <MudStack>
-    <MudSelect @bind-Value="CustomAppTheme.CurrentMode" Variant="Variant.Text" Style="width:150px">
+    <MudSelect Label="Color Mode" @bind-Value="CustomAppTheme!.CurrentMode" 
+        Dense="true"
+        Variant="Variant.Text" Style="width:150px" 
+        SelectedValuesChanged="@((IEnumerable<ThemeColorMode> e) => OnColorModeChanged(e))">
         <MudSelectItem Value="ThemeColorMode.System" Style="vertical-align:middle">
             <MudStack Row>
                 <MudIcon Icon="@Icons.Material.Outlined.SettingsPower" />
@@ -28,4 +31,8 @@
     [CascadingParameter]
     private CustomAppTheme? CustomAppTheme { get; set; }
 
+    private void OnColorModeChanged(IEnumerable<ThemeColorMode> args)
+    {
+        NavigationManager.Refresh();
+    }
 }

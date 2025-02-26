@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using MauiHybridAuth.Web.Data
+@using System.Security.Claims
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -19,6 +20,12 @@
     <DataAnnotationsValidator />
 
     <MudGrid>
+        <MudItem md="12">
+            <MudStaticTextField For="@(() => Input.GivenName)" @bind-Value="Input.GivenName" Label="First name" Placeholder="Please enter your first name." />
+        </MudItem>
+        <MudItem md="12">
+            <MudStaticTextField For="@(() => Input.Surname)" @bind-Value="Input.Surname" Label="Last name" Placeholder="Please enter your last name." />
+        </MudItem>
         <MudItem md="12">
             <MudStaticTextField Value="@username" Label="Username" Disabled="true" Placeholder="Please choose your username." />
         </MudItem>
@@ -51,6 +58,8 @@
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
 
         Input.PhoneNumber ??= phoneNumber;
+        Input.GivenName ??= user.FirstName;
+        Input.Surname ??= user.LastName;
     }
 
     private async Task OnValidSubmitAsync()
@@ -63,13 +72,34 @@
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
             }
         }
-
+        user.FirstName = Input.GivenName!;
+        user.LastName = Input.Surname!;
+        // if (Request.Form.Files.Count > 0)
+        // {
+        //     IFormFile file = Request.Form.Files.FirstOrDefault();
+        //     using (var dataStream = new MemoryStream())
+        //     {
+        //         await file.CopyToAsync(dataStream);
+        //         user.ProfilePicture = dataStream.ToArray();
+        //     }
+        //     await _userManager.UpdateAsync(user);
+        // }
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
     private sealed class InputModel
     {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "First name")]
+        public string? GivenName { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Last name")]
+        public string? Surname { get; set; }
+
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }

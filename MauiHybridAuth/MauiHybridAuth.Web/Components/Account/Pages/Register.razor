@@ -35,6 +35,16 @@
 
             <MudGrid>
                 <MudItem xs="12">
+                    <MudStaticTextField For="@(() => Input.GivenName)" @bind-Value="Input.GivenName"
+                                        Label="First name" Placeholder="Joe"
+                                        UserAttributes="@(new() { { "autocomplete", "true" }, { "aria-required", "true" } } )" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudStaticTextField For="@(() => Input.Surname)" @bind-Value="Input.Surname"
+                                        Label="Last Name" Placeholder="Bloggs"
+                                        UserAttributes="@(new() { { "autocomplete", "true" }, { "aria-required", "true" } } )" />
+                </MudItem>
+                <MudItem xs="12">
                     <MudStaticTextField For="@(() => Input.Email)" @bind-Value="Input.Email"
                                         Label="Email" Placeholder="name@example.com"
                                         UserAttributes="@(new() { { "autocomplete", "true" }, { "aria-required", "true" } } )" />
@@ -79,6 +89,8 @@
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        user.FirstName = Input.GivenName;
+        user.LastName = Input.Surname;
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -133,6 +145,16 @@
 
     private sealed class InputModel
     {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "First Name")]
+        public string GivenName { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Last Name")]
+        public string Surname { get; set; }
+
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
