@@ -1,0 +1,41 @@
+﻿@page "/Admin"
+@using MauiHybridAuth.Web.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> userManager
+@inject RoleManager<ApplicationRole> roleManager
+
+<PageTitle>Admin</PageTitle>
+
+<MudTabs>
+    <MudTabPanel Text="Users">
+        <MudDataGrid Items="@userManager.Users">
+            <Columns>
+                <SelectColumn T="ApplicationUser" />
+                <PropertyColumn Property="x => x.FirstName" Title="Name" />
+                <PropertyColumn Property="x => x.LastName" Title="Surname" />
+                <PropertyColumn Property="x => x.UserName" />
+                <PropertyColumn Property="x => x.Email" Title="Email" />
+                <PropertyColumn Property="x => x.Roles" Title="Roles" />
+            </Columns>
+        </MudDataGrid>
+    </MudTabPanel>
+    <MudTabPanel Text="Roles">
+        <MudDataGrid Items="@roleManager.Roles">
+            <Columns>
+                <SelectColumn T="ApplicationRole" />
+                <PropertyColumn Property="x => x.Name" Title="Name" />
+            </Columns>
+        </MudDataGrid>
+    </MudTabPanel>
+</MudTabs>
+@code {
+
+    private List<ApplicationUser> users = new();
+    private List<ApplicationRole> roles = new();
+    protected override async Task OnInitializedAsync()
+    {
+        // users = userManager.Users.ToList();
+        // roles = roleManager.Roles.ToList();
+    }
+}
