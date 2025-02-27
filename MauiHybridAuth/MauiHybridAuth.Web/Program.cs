@@ -4,6 +4,7 @@ using MauiHybridAuth.Web.Components;
 using MauiHybridAuth.Web.Components.Account;
 using MauiHybridAuth.Web.Data;
 using MauiHybridAuth.Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -47,6 +48,10 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options => option
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+});
 //Needed for external clients to log in
 //builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
 //    .AddEntityFrameworkStores<ApplicationDbContext>();
