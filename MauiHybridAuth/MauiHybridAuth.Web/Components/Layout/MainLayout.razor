@@ -13,23 +13,23 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => NavDrawerToggle())" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@NavDrawerToggle" />
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <AuthorizeView>
                 <Authorized>
                     <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
-                        <MudAvatar >
-                            @if(user != null)
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
+                            @if (CurrentUser != null)
                             {
-                                @if(user.ProfilePicture.Length > 0)
+                                @if (CurrentUser.ProfilePicture?.Length > 0)
                                 {
-                                    <MudImage Src="@("data:image /*;base64," + Convert.ToBase64String(user.ProfilePicture))"/>
+                                    <MudImage Src="@($"data:image/*;base64,{Convert.ToBase64String(CurrentUser.ProfilePicture)}")" />
                                 }
                                 else
                                 {
-                                    <MudText>@user.Initials</MudText>
+                                    <MudText>@CurrentUser.Initials</MudText>
                                 }
                             }
                             else
@@ -41,20 +41,21 @@
                 </Authorized>
                 <NotAuthorized>
                     <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
-                        <MudAvatar>
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
                             <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
                         </MudAvatar>
                     </MudBadge>
                 </NotAuthorized>
             </AuthorizeView>
-            <MudIconButton OnClick="@((e) => ProfileDrawerToggle())" Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
         </MudStack>
     </MudAppBar>
     <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
     </MudDrawer>
-    <MudDrawer Class="pa-5" @bind-Open="_profileDrawerOpen" Variant="@DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" >
-        <ProfileMenu />
+    <MudDrawer Width="320px" Class="pa-2 pl-5 pr-5" @bind-Open="ProfileDrawerOpen" Variant="DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2">
+        <CascadingValue Value="CurrentUser">
+            <ProfileMenu />
+        </CascadingValue>
     </MudDrawer>
     <MudMainContent Class="mt-16 pa-4">
         @Body
@@ -72,10 +73,9 @@
     private HttpContext? HttpContext { get; set; }
     [CascadingParameter]
     private CustomAppTheme? CustomAppTheme { get; set; }
-
+    private ApplicationUser? CurrentUser { get; set; }
+    private bool ProfileDrawerOpen { get; set; } = false;
     private bool _navDrawerOpen = true;
-    private bool _profileDrawerOpen = false;
-    private ApplicationUser? user;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,19 +86,22 @@
     private async Task UpdateUser()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User == null)
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
         {
-            user = null;
-            return;
+            CurrentUser = await UserManager.GetUserAsync(user);
         }
-        var userClaim = authState.User;
-        user = await UserManager.GetUserAsync(userClaim);
+        else
+        {
+            CurrentUser = null;
+        }
     }
 
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
         await UpdateUser();
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void NavDrawerToggle()
@@ -108,6 +111,6 @@
 
     private void ProfileDrawerToggle()
     {
-        _profileDrawerOpen = !_profileDrawerOpen;
+        ProfileDrawerOpen = !ProfileDrawerOpen;
     }
 }

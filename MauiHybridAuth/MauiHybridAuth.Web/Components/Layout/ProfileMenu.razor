@@ -1,52 +1,80 @@
 ﻿@using MauiHybridAuth.Shared.Theme
 @using MauiHybridAuth.Web.Components.Account
+@using MauiHybridAuth.Web.Data
 @inject NavigationManager NavigationManager
 @inject IdentityUserAccessor UserAccessor
 
-<MudGrid>
-    <AuthorizeView >
+<MudStack Spacing="4" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Stretch" Style="height:100%">
+    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText>Settings</MudText>
+        <MudSpacer/>
+        <MudIcon Icon="@Icons.Material.Filled.Settings" />
+    </MudStack>
+    <AuthorizeView>
         <Authorized>
-            <MudItem>
-
-            </MudItem>
+            <MudStack Row Justify="Justify.Center" Spacing="5">
+                <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
+                    <MudAvatar Style="width:88px; height:88px;" Rounded>
+                        @if (CurrentUser != null)
+                        {
+                            @if (CurrentUser.ProfilePicture?.Length > 0)
+                            {
+                                <MudImage Src="@($"data:image/*;base64,{Convert.ToBase64String(CurrentUser.ProfilePicture)}")" />
+                            }
+                            else
+                            {
+                                <MudText>@CurrentUser.Initials</MudText>
+                            }
+                        }
+                        else
+                        {
+                            <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                        }
+                    </MudAvatar>
+                </MudBadge>
+                @if (CurrentUser != null)
+                {
+                    <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+                        <MudText Typo="Typo.subtitle2">@($"{CurrentUser.FirstName} {CurrentUser.LastName}")</MudText>
+                        <MudText Typo="Typo.body2">@CurrentUser.Email</MudText>
+                        <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
+                        <form action="Account/Logout" method="post">
+                            <AntiforgeryToken />
+                            <button type="submit" class="mud-link mud-ripple">
+                                <MudLink Typo="Typo.body2">Logout</MudLink>
+                            </button>
+                        </form>
+                    </MudStack>
+                } 
+            </MudStack>
         </Authorized>
+        <NotAuthorized>
+            <MudStack Spacing="0">
+                <MudNavLink Href="/Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Register</MudNavLink>
+                <MudNavLink Href="/Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Password">Login</MudNavLink>
+            </MudStack>
+        </NotAuthorized>
     </AuthorizeView>
-    <MudSelect Label="Color Mode" @bind-Value="CustomAppTheme!.CurrentMode" 
-    Dense="true"
-    Variant="Variant.Text" Style="width:150px" 
-    SelectedValuesChanged="@((IEnumerable<ThemeColorMode> e) => OnColorModeChanged(e))">
-        <MudSelectItem Value="ThemeColorMode.System" Style="vertical-align:middle">
-            <MudStack Row>
-                <MudIcon Icon="@Icons.Material.Outlined.SettingsPower" />
-                <MudText>System</MudText>
-            </MudStack>
-        </MudSelectItem>
-        <MudSelectItem Value="ThemeColorMode.Light">
-            <MudStack Row>
-                <MudIcon Icon="@Icons.Material.Outlined.LightMode" />
-                <MudText>Light</MudText>
-            </MudStack>
-        </MudSelectItem>
-        <MudSelectItem Value="ThemeColorMode.Dark">
-            <MudStack Row>
-                <MudIcon Icon="@Icons.Material.Outlined.DarkMode" />
-                <MudText>Dark</MudText>
-            </MudStack>
-        </MudSelectItem>
-    </MudSelect>
-</MudGrid>
+    <MudSpacer />
+    <MudStack Row Justify="Justify.FlexEnd" Class="pa-0 ma-0">
+        <MudIconButton Icon="@CustomAppTheme.Icon" OnClick="@((e) => ColorModeToggle())" Size="Size.Large" title="Color Mode" />
+    </MudStack>
+</MudStack>
 
 @code {
     [CascadingParameter]
     private CustomAppTheme? CustomAppTheme { get; set; }
+    [CascadingParameter]
+    protected ApplicationUser? CurrentUser { get; set; }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        return base.OnAfterRenderAsync(firstRender);
+        await base.OnAfterRenderAsync(firstRender);
     }
 
-    private void OnColorModeChanged(IEnumerable<ThemeColorMode> args)
+    private void ColorModeToggle()
     {
+        CustomAppTheme?.ToggleMode();
         NavigationManager.Refresh();
     }
 }
