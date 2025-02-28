@@ -17,43 +17,28 @@ namespace MauiHybridAuth.Services
     public interface ICustomAuthenticationStateProvider
     {
         public LoginStatus LoginStatus { get; set; }
+        public AccessTokenInfo? AccessTokenInfo { get; }
         Task<AuthenticationState> GetAuthenticationStateAsync();
         Task LogInAsync(LoginModel loginModel);
         void Logout();
     }
+    /// <summary>
+    /// This class manages the authentication state of the user. 
+    /// The class handles user login, logout, and token validation, including refreshing tokens when they are close to expiration.
+    /// It uses secure storage to save and retrieve tokens, ensuring that users do not need to log in every time.
+    /// </summary>
     public class MauiAuthenticationStateProvider : AuthenticationStateProvider, ICustomAuthenticationStateProvider
     {
         //TODO: Place this in AppSettings or Client config file
-        private string _loginUri = "https://localhost:7157/login";
-        private string _refreshUri = "https://localhost:7157/refresh";
-        private const string StorageKeyName = "access_token";
         private const string AuthenticationType = "Custom authentication";
         private const int TokenExpirationBuffer = 30; //minutes
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
         private ClaimsPrincipal _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
         private AccessTokenInfo? _accessToken;
-
-        public MauiAuthenticationStateProvider()
+        public AccessTokenInfo? AccessTokenInfo
         {
-#if DEBUG
-            //See: https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services
-            //Android Emulator uses 10.0.2.2 to refer to localhost            
-            if (DeviceInfo.Platform == DevicePlatform.Android)
-            {
-                _loginUri = _loginUri.Replace("localhost", "10.0.2.2");
-                _refreshUri = _refreshUri.Replace("localhost", "10.0.2.2");
-            }
-#endif
-        }
-
-        private static HttpClient GetHttpClient()
-        {
-#if WINDOWS || MACCATALYST
-            return new HttpClient();
-#else
-            return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler()); 
-#endif
+            get => _accessToken;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -67,7 +52,7 @@ namespace MauiHybridAuth.Services
             LoginStatus = LoginStatus.None;
             _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
             _accessToken = null;
-            SecureStorage.Remove(StorageKeyName);
+            TokenStorage.RemoveToken();
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentUser)));
         }
 
@@ -95,9 +80,9 @@ namespace MauiHybridAuth.Services
             try
             {
                 //Call the Login endpoint and pass the email and password
-                var httpClient = MauiAuthenticationStateProvider.GetHttpClient();
+                var httpClient = HttpClientHelper.GetHttpClient();
                 var loginData = new { loginModel.Email, loginModel.Password };
-                var response = await httpClient.PostAsJsonAsync(_loginUri, loginData);
+                var response = await httpClient.PostAsJsonAsync(HttpClientHelper.LoginUrl, loginData);
 
                 LoginStatus = response.IsSuccessStatusCode ? LoginStatus.Success : LoginStatus.Failed;
 
@@ -105,7 +90,7 @@ namespace MauiHybridAuth.Services
                 {
                     // Save token to secure storage so the user doesn't have to login every time
                     var token = await response.Content.ReadAsStringAsync();
-                    await SaveTokenToSecureStorageAsync(token, loginModel.Email);
+                    _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, loginModel.Email);
                                         
                     authenticatedUser = CreateAuthenticatedUser(loginModel.Email);
                 }               
@@ -140,7 +125,7 @@ namespace MauiHybridAuth.Services
 
             try
             {
-                _accessToken = await GetTokenFromSecureStorageAsync();
+                _accessToken = await TokenStorage.GetTokenFromSecureStorageAsync();
 
                 if (_accessToken?.LoginToken != null)                
                 {                    
@@ -176,13 +161,13 @@ namespace MauiHybridAuth.Services
                 if (refreshToken != null)
                 {
                     //Call the Refresh endpoint and pass the refresh token
-                    var httpClient = MauiAuthenticationStateProvider.GetHttpClient();
+                    var httpClient = HttpClientHelper.GetHttpClient();
                     var refreshData = new { refreshToken };
-                    var response = await httpClient.PostAsJsonAsync(_refreshUri, refreshData);
+                    var response = await httpClient.PostAsJsonAsync(HttpClientHelper.RefreshUrl, refreshData);
                     if (response.IsSuccessStatusCode)
                     {
                         var token = await response.Content.ReadAsStringAsync();
-                        await SaveTokenToSecureStorageAsync(token, email);
+                        _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
                     }
                 }
             }
@@ -192,50 +177,6 @@ namespace MauiHybridAuth.Services
             }  
         }
 
-        private async Task<AccessTokenInfo> GetTokenFromSecureStorageAsync()
-        {
-            try
-            {
-                var token = await SecureStorage.GetAsync(StorageKeyName);
-                
-                if (!string.IsNullOrEmpty(token)) {             
-                    return JsonSerializer.Deserialize<AccessTokenInfo>(token);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Unable to retrieve AccessTokenInfo from SecureStorage." + ex);                
-            }
-            return null;
-        }
-
-        private async Task SaveTokenToSecureStorageAsync(string token, string email)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(email))
-                {
-                    var loginToken = JsonSerializer.Deserialize<LoginToken>(token);
-                    if (loginToken != null)
-                    {
-                        DateTime tokenExpiration = DateTime.UtcNow.AddSeconds(loginToken.ExpiresIn);
-
-                        _accessToken = new AccessTokenInfo {
-                           LoginToken = loginToken, 
-                           Email = email,
-                           TokenExpiration = tokenExpiration };
-
-                        await SecureStorage.SetAsync(StorageKeyName, JsonSerializer.Serialize<AccessTokenInfo>(_accessToken));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Unable to save AccessTokenInfo to SecureStorage." + ex);
-                _accessToken = null;
-            }
-        }
-
         private ClaimsPrincipal CreateAuthenticatedUser(string email)
         {
             var claims = new[] { new Claim(ClaimTypes.Name, email) };  //TODO: Add more claims as needed
@@ -243,59 +184,5 @@ namespace MauiHybridAuth.Services
             return new ClaimsPrincipal(identity);
         }
 
-        private class AccessTokenInfo
-        {
-            public required string Email { get; set; }
-            public required LoginToken LoginToken { get; set; }
-            public required DateTime TokenExpiration { get; set; }            
-        }
-
-        private class LoginToken
-        {
-            [JsonPropertyName("tokenType")]
-            public required string TokenType { get; set; }
-
-            [JsonPropertyName("accessToken")]
-            public required string AccessToken { get; set; }
-
-            [JsonPropertyName("expiresIn")]
-            public required int ExpiresIn { get; set; } = 0;
-
-            [JsonPropertyName("refreshToken")]
-            public required string RefreshToken { get; set; }            
-        }
     }
-
-    public class HttpsClientHandlerService
-    {
-        public HttpMessageHandler GetPlatformMessageHandler()
-        {
-#if ANDROID
-            var handler = new Xamarin.Android.Net.AndroidMessageHandler();
-            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
-            {
-                if (cert != null && cert.Issuer.Equals("CN=localhost"))
-                    return true;
-                return errors == System.Net.Security.SslPolicyErrors.None;
-            };
-            return handler;
-#elif IOS
-        var handler = new NSUrlSessionHandler
-        {
-            TrustOverrideForUrl = IsHttpsLocalhost
-        };
-        return handler;
-#else
-            throw new PlatformNotSupportedException("Only Android and iOS supported.");
-#endif
-        }
-
-#if IOS
-    public bool IsHttpsLocalhost(NSUrlSessionHandler sender, string url, Security.SecTrust trust)
-    {
-        return url.StartsWith("https://localhost");
-    }
-#endif
-    }
-
 }
