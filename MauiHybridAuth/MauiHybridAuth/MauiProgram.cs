@@ -1,7 +1,6 @@
 ﻿using MauiHybridAuth.Services;
 using MauiHybridAuth.Shared.Services;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace MauiHybridAuth

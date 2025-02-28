@@ -24,7 +24,7 @@ namespace MauiHybridAuth.Services
 
                 var loginToken = _authenticationStateProvider.AccessTokenInfo?.LoginToken;
                 var token = loginToken?.AccessToken;
-                var scheme = loginToken?.TokenType;
+                var scheme = loginToken?.TokenType; //"Bearer"
 
                 if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
                 {

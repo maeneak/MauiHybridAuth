@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MauiHybridAuth.Services
 {
