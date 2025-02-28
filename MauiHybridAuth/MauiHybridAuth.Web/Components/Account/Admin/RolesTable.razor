@@ -1,0 +1,27 @@
+﻿@using MauiHybridAuth.Web.Data
+@using Microsoft.AspNetCore.Identity
+@inject RoleManager<ApplicationRole> roleManager
+
+<MudDataGrid @ref="dataGrid" Items="@roleManager.Roles" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick"
+CommittedItemChanges="@((ApplicationRole user) => CommittedItemChanges(user))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Application Roles</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.AddCard" OnClick="@(() => dataGrid.SetEditingItemAsync(new ApplicationRole()))" />
+    </ToolBarContent>
+    <Columns>
+        <SelectColumn T="ApplicationRole" />
+        <PropertyColumn Property="x => x.Name" Title="Name" />
+    </Columns>
+</MudDataGrid>
+
+@code {
+    MudDataGrid<ApplicationRole> dataGrid;
+
+    async void CommittedItemChanges(ApplicationRole item)
+    {
+        await roleManager.UpdateAsync(item);
+        StateHasChanged();
+    }
+
+}
