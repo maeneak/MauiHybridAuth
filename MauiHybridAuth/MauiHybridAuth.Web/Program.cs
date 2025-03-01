@@ -73,6 +73,19 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Ensure the database is created
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+
+        // Apply pending migrations
+        await dbContext.Database.MigrateAsync();
+
+        // Seed roles and admin user
+        await IdentitySeeder.SeedRolesAndAdminAsync(services);
+    }
+    
     // Apply migrations & create database if needed at startup
     //using (var scope = app.Services.CreateScope())
     //{
