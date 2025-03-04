@@ -23,7 +23,7 @@
                             }
                             else
                             {
-                                <MudText>@CurrentUser.Initials</MudText>
+                                <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
                             }
                         }
                         else
@@ -40,6 +40,7 @@
                         <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
                         <form action="Account/Logout" method="post">
                             <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="" />
                             <button type="submit" class="mud-link mud-ripple">
                                 <MudLink Typo="Typo.body2">Logout</MudLink>
                             </button>

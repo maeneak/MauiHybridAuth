@@ -1,8 +1,9 @@
 ﻿@page "/Admin"
 @using MauiHybridAuth.Web.Data
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 
-@inject RoleManager<ApplicationRole> roleManager
+@inject RoleManager<IdentityRole> roleManager
 @inject UserManager<ApplicationUser> userManager
 @inject ISnackbar Snackbar
 
@@ -24,17 +25,35 @@
                         <PropertyColumn Property="x => x.LastName" Title="Surname" />
                         <PropertyColumn Property="x => x.Email" Title="Email" />
                         <PropertyColumn Property="x => x.UserName" />
-                        <PropertyColumn Property="x => x.Roles" Title="Roles" />
+                        <PropertyColumn Property="x => x.Roles" Title="User Roles">
+                            <EditTemplate> 
+                                <MudSelect @bind-SelectedValues="@context.Item.Roles" Converter="RoleConverter" T="IdentityRole"  Label="User Roles" Dense Variant="Variant.Outlined" MultiSelection="true">
+                                    @foreach (IdentityRole role in roles)
+                                    {
+                                        <MudSelectItem T="IdentityRole" Value="@role">@role.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </EditTemplate>
+                            <CellTemplate>
+                                @if (context.Item.UserRoles != null)
+                                {
+                                    @foreach (var userrole in context.Item.Roles)
+                                    {
+                                        <MudChip T="string">@userrole.Name</MudChip>
+                                    }
+                                }
+                            </CellTemplate>
+                        </PropertyColumn>
                     </Columns>
                 </MudDataGrid>
             </MudTabPanel>
             <MudTabPanel Text="Roles">
                 <MudDataGrid @ref="roleGrid" Items="@roles" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick"
-                CommittedItemChanges="@((ApplicationRole user) => RoleChanged(user))" ReadOnly="false">
+                CommittedItemChanges="@((IdentityRole user) => RoleChanged(user))" ReadOnly="false">
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Application Roles</MudText>
                         <MudSpacer />
-                        <MudIconButton Icon="@Icons.Material.Filled.AddCircle" OnClick="@(() => roleGrid.SetEditingItemAsync(new ApplicationRole()))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AddCircle" OnClick="@(() => roleGrid.SetEditingItemAsync(new IdentityRole()))" />
                     </ToolBarContent>
                     <Columns>
                         <PropertyColumn Property="x => x.Name" Title="Name" />
@@ -57,53 +76,90 @@
     [Inject]
     private IDialogService DialogService { get; set; }
     private List<ApplicationUser> users;
-    private List<ApplicationRole> roles;
-    MudDataGrid<ApplicationRole> roleGrid;
+    private List<IdentityRole> roles;
+    MudDataGrid<IdentityRole> roleGrid;
     MudDataGrid<ApplicationUser> userGrid;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            users = userManager.Users.ToList();
-            roles = roleManager.Roles.ToList();
+            await UpdateRoles(false);
+            await UpdateUsers(false);
+
+            StateHasChanged();
         }
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async void UpdateRoles()
+    async Task UpdateRoles(bool update = true)
     {
-        roles = roleManager.Roles.ToList();
-        StateHasChanged();
+        roles = await roleManager.Roles.ToListAsync();
+        if (update) StateHasChanged();
+
     }
-    private async void UpdateUsers()
+
+    async Task UpdateUsers(bool update = true)
     {
-        users = userManager.Users.ToList();
-        StateHasChanged();
+        users = await userManager.Users.Include(inc => inc.UserRoles).ToListAsync();
+
+        foreach (var user in users)
+        {
+            user.Roles = user.UserRoles
+                .Select(userRole => roles.First(role => role.Id == userRole.RoleId))
+                .ToList();
+        }
+
+        if (update) StateHasChanged();
     }
-    async void RoleChanged(ApplicationRole role)
+
+    async Task SaveUserRoles(ApplicationUser user)
     {
-        if (roleManager.RoleExistsAsync(role.Name).Result) {
+        var newroles = (from u in user.Roles where u.Name != null && !user.UserRoles.Select(ur=>ur.RoleId).Contains(u.Id) select u.Name);
+        if(newroles.Any())
+        {
+            await userManager.AddToRolesAsync(user, newroles);
+        }
+        else
+        {
+            var allroles = from r in roles where r.Name != null select r.Name;
+            await userManager.RemoveFromRolesAsync(user, allroles);
+        }
+        await UpdateUsers();
+    }
+
+    async void RoleChanged(IdentityRole role)
+    {
+        if (await roleManager.RoleExistsAsync(role.Name)) {
             Snackbar.Add("Role already exists.");
         }
         else {
             IdentityResult result = await roleManager.CreateAsync(role);
-            UpdateRoles();        }
+            await UpdateRoles();        
+        }
     }
-    async void DeleteRole(ApplicationRole role)
+    async void DeleteRole(IdentityRole role)
     {
         bool? confirm = await DialogService.ShowMessageBox("Confirm Delete", $"Delete the role '{role.Name}'?", yesText: "Delete", cancelText: "Cancel");
         if (confirm != null && confirm == true)
         {
             IdentityResult result = await roleManager.DeleteAsync(role);
-            UpdateRoles();
+            await UpdateRoles();
         }
+    }
+
+    async void OnStartEditUser(ApplicationUser user)
+    {
+        await UpdateRoles(false);
+        await UpdateUsers(false);
+        StateHasChanged();
     }
 
     async void OnUserChanged(ApplicationUser user)
     {
         IdentityResult result = await userManager.UpdateAsync(user);
-        UpdateUsers();
+        await SaveUserRoles(user);
+        await UpdateUsers();
     }
 
 }
