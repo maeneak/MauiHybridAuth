@@ -1,0 +1,52 @@
+﻿@using MauiHybridAuth.Web.Data
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Class="mr-3 mb-n1" />
+            User
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                @if(User.ProfilePicture.Length > 0)
+                {
+                    <MudImage Width="88" Height="88" Src="@User.ProfilePictureBase64" />
+                } else
+                {
+                    <MudImage Width="88" Height="88" Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                }
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="First Name" @bind-Value="User.FirstName" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="Last Name" @bind-Value="User.LastName" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="Username" @bind-Value="User.UserName" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="Email" @bind-Value="User.Email" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="Mobile" @bind-Value="User.PhoneNumber" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Info">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ApplicationUser User { get; set; } = new ApplicationUser();
+
+    private void Cancel() => MudDialog.Cancel();
+}
