@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using MudExtensions.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
-
+builder.Services.AddMudExtensions();
 // Add device-specific services used by the MauiHybridAuth.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
@@ -30,7 +31,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-builder.Services.AddCascadingValue(sp => new CustomAppTheme {});
+builder.Services.AddCascadingValue(sp => new CustomAppTheme { });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>

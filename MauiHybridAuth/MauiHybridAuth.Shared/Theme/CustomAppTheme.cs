@@ -49,6 +49,7 @@ namespace MauiHybridAuth.Shared.Theme
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
     }
     public enum ThemeColorMode
     {
@@ -56,4 +57,6 @@ namespace MauiHybridAuth.Shared.Theme
         Dark,
         System = -1
     }
+
+
 }

@@ -13,8 +13,8 @@
     <Authorized>
         <MudTabs>
             <MudTabPanel Text="Users" >
-                <MudDataGrid @ref="userGrid" Items="@users" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick"
-                CommittedItemChanges="@((ApplicationUser user) => OnUserChanged(user))">
+                <MudDataGrid @ref="userGrid" Items="@users" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+                CommittedItemChanges="@((ApplicationUser user) => OnUserChanged(user))" EditDialogOptions="@(new DialogOptions() {CloseButton=true})">
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Application Users</MudText>
                         <MudSpacer />
@@ -23,32 +23,39 @@
                     <Columns>
                         <PropertyColumn Property="x => x.FirstName" Title="Name" />
                         <PropertyColumn Property="x => x.LastName" Title="Surname" />
+                        <PropertyColumn Property="x => x.UserName" Title="Username" />
                         <PropertyColumn Property="x => x.Email" Title="Email" />
-                        <PropertyColumn Property="x => x.UserName" />
+                        <PropertyColumn Property="x => x.PhoneNumber" Title="Mobile" />
                         <PropertyColumn Property="x => x.Roles" Title="User Roles">
                             <EditTemplate> 
-                                <MudSelect @bind-SelectedValues="@context.Item.Roles" Converter="RoleConverter" T="IdentityRole"  Label="User Roles" Dense Variant="Variant.Outlined" MultiSelection="true">
-                                    @foreach (IdentityRole role in roles)
-                                    {
-                                        <MudSelectItem T="IdentityRole" Value="@role">@role.Name</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                <MudSelectExtended @bind-SelectedValues="@context.Item.Roles" Label="User Roles" Dense Variant="Variant.Outlined"
+                                                    MultiSelection="true" ChipVariant="Variant.Filled" ChipCloseable ChipSize="Size.Small" ItemCollection="roleNames"
+                                                    ValuePresenter="valuePresenter" Color="Color.Info" />
                             </EditTemplate>
                             <CellTemplate>
                                 @if (context.Item.UserRoles != null)
                                 {
                                     @foreach (var userrole in context.Item.Roles)
                                     {
-                                        <MudChip T="string">@userrole.Name</MudChip>
+                                        <MudChip Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" T="string">@userrole</MudChip>
                                     }
                                 }
                             </CellTemplate>
                         </PropertyColumn>
+                        <TemplateColumn Sortable="false" Filterable="false">
+                            <CellTemplate>
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small"
+                                         AriaLabel="User menu">
+                                    <MudMenuItem Label="Edit" OnClick="@(()=>EditUserAsync(context.Item))" />
+                                    <MudMenuItem Label="Delete" />
+                                </MudMenu>
+                            </CellTemplate>
+                        </TemplateColumn>
                     </Columns>
                 </MudDataGrid>
             </MudTabPanel>
             <MudTabPanel Text="Roles">
-                <MudDataGrid @ref="roleGrid" Items="@roles" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick"
+                <MudDataGrid @ref="roleGrid" Items="@roles" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
                 CommittedItemChanges="@((IdentityRole user) => RoleChanged(user))" ReadOnly="false">
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Application Roles</MudText>
@@ -75,11 +82,12 @@
 @code {
     [Inject]
     private IDialogService DialogService { get; set; }
-    private List<ApplicationUser> users;
-    private List<IdentityRole> roles;
+    private List<ApplicationUser> users = new List<ApplicationUser>();
+    private List<IdentityRole> roles = new List<IdentityRole>();
+    private List<string> roleNames = new List<string>();
     MudDataGrid<IdentityRole> roleGrid;
     MudDataGrid<ApplicationUser> userGrid;
-
+    ValuePresenter valuePresenter = ValuePresenter.Chip;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -92,9 +100,24 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private async Task EditUserAsync(ApplicationUser user)
+    {
+        var parameters = new DialogParameters<UserFormDialog> { { x => x.User, user } };
+
+        var dialog = await DialogService.ShowAsync<UserFormDialog>(user.Email, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            //Guid.TryParse(result.Data.ToString(), out Guid deletedServer);
+        }
+    }
+
     async Task UpdateRoles(bool update = true)
     {
         roles = await roleManager.Roles.ToListAsync();
+        roleNames = roles.Select(r => r.Name!).Order().ToList(); 
         if (update) StateHasChanged();
 
     }
@@ -105,9 +128,10 @@
 
         foreach (var user in users)
         {
-            user.Roles = user.UserRoles
-                .Select(userRole => roles.First(role => role.Id == userRole.RoleId))
-                .ToList();
+            user.Roles = roles
+                .Where(role => user.UserRoles.Any(r => r.RoleId == role.Id))
+                .Select(role => role.Name!)
+                .AsEnumerable<string>();
         }
 
         if (update) StateHasChanged();
@@ -115,36 +139,56 @@
 
     async Task SaveUserRoles(ApplicationUser user)
     {
-        var newroles = (from u in user.Roles where u.Name != null && !user.UserRoles.Select(ur=>ur.RoleId).Contains(u.Id) select u.Name);
-        if(newroles.Any())
+        var currentRoles = await userManager.GetRolesAsync(user);
+        if(user.Roles.Any())
         {
-            await userManager.AddToRolesAsync(user, newroles);
+            await userManager.AddToRolesAsync(user, user.Roles.Except(currentRoles));
+            await userManager.RemoveFromRolesAsync(user, currentRoles.Except(user.Roles));
         }
         else
         {
-            var allroles = from r in roles where r.Name != null select r.Name;
-            await userManager.RemoveFromRolesAsync(user, allroles);
+            if (currentRoles.Any())
+                await userManager.RemoveFromRolesAsync(user, currentRoles);
         }
         await UpdateUsers();
     }
 
     async void RoleChanged(IdentityRole role)
     {
-        if (await roleManager.RoleExistsAsync(role.Name)) {
-            Snackbar.Add("Role already exists.");
+        if (role.NormalizedName == null)
+        {
+            if (await roleManager.RoleExistsAsync(role.Name))
+            {
+                Snackbar.Add("Role already exists.");
+                return;
+            }
+            IdentityResult result = await roleManager.CreateAsync(role);
+            Snackbar.Add("New role created.");
         }
         else {
-            IdentityResult result = await roleManager.CreateAsync(role);
-            await UpdateRoles();        
+            await roleManager.UpdateAsync(role);
+            Snackbar.Add("Role updated.");
         }
+        await UpdateRoles();        
     }
     async void DeleteRole(IdentityRole role)
     {
-        bool? confirm = await DialogService.ShowMessageBox("Confirm Delete", $"Delete the role '{role.Name}'?", yesText: "Delete", cancelText: "Cancel");
+        bool? confirm = await DialogService.ShowMessageBox("Confirm Delete", $"Delete the role '{role.Name}'?", yesText: "Permenantly Delete", cancelText: "Cancel");
         if (confirm != null && confirm == true)
         {
             IdentityResult result = await roleManager.DeleteAsync(role);
+            Snackbar.Add("Role deleted.");
             await UpdateRoles();
+        }
+    }
+    async void DeleteUser(ApplicationUser user)
+    {
+        bool? confirm = await DialogService.ShowMessageBox("Confirm Delete", $"Delete the user '{user.Email}'?", yesText: "Permenantly Delete", cancelText: "Cancel");
+        if (confirm != null && confirm == true)
+        {
+            IdentityResult result = await userManager.DeleteAsync(user);
+            Snackbar.Add("User deleted.");
+            await UpdateUsers();
         }
     }
 

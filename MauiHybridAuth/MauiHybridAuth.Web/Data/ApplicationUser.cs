@@ -13,7 +13,13 @@ namespace MauiHybridAuth.Web.Data
         public byte[] ProfilePicture { get; set; } = new byte[0];
         public string? Initials { get; set; } = string.Empty;
         [NotMapped]
-        public IEnumerable<IdentityRole> Roles { get; set; } = new List<IdentityRole>();
+        public IEnumerable<string> Roles { get; set; } = new List<string>();
+        [NotMapped]
+        public string ProfilePictureBase64 { 
+            get {
+                return $"data:image/*;base64,{Convert.ToBase64String(ProfilePicture)}";
+            } 
+        }
 
         public virtual ICollection<IdentityUserClaim<string>> Claims { get; set; } = new List<IdentityUserClaim<string>>();
         public virtual ICollection<IdentityUserLogin<string>> Logins { get; set; } = new List<IdentityUserLogin<string>>();
