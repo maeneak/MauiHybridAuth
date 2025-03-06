@@ -1,22 +1,27 @@
 ﻿@using MauiHybridAuth.Web.Data
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Class="mr-3 mb-n1" />
-            User
+            @MudDialog.Title
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
-                @if(User.ProfilePicture.Length > 0)
-                {
-                    <MudImage Width="88" Height="88" Src="@User.ProfilePictureBase64" />
-                } else
-                {
-                    <MudImage Width="88" Height="88" Src="_content/MauiHybridAuth.Shared/img/profile.png" />
-                }
+                <MudImage Width="88" Height="88" Src="@User.ProfilePictureBase64" FallbackSrc="_content/MauiHybridAuth.Shared/img/profile.png" />
+                <MudStack Row>
+                    <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="ChangeProfilePicture" MaximumFileCount="100">
+                        <ActivatorContent>
+                            <MudIconButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
+                            Icon="@Icons.Material.Filled.FileUpload"/>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                    <MudIconButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
+                        Icon="@Icons.Material.Filled.Delete" OnClick="ResetProfilePicture"/>
+                </MudStack>
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudTextField Label="First Name" @bind-Value="User.FirstName" />
@@ -37,7 +42,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Info">Save</MudButton>
+        <MudButton Color="Color.Info" OnClick="SaveUser">Save</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -49,4 +54,29 @@
     public ApplicationUser User { get; set; } = new ApplicationUser();
 
     private void Cancel() => MudDialog.Cancel();
+
+    private void SaveUser()
+    {
+        MudDialog.Close(User);
+    }
+
+    private void ResetProfilePicture()
+    {
+        User.ProfilePicture = new byte[0];
+        StateHasChanged();
+    }
+
+    async void ChangeProfilePicture(IBrowserFile file)
+    {
+        if (file.Size > 1024000)
+        {
+            Snackbar.Add("The image is too large (max 1mb).", Severity.Error);
+            return;
+        }
+        MemoryStream fileOut = new();
+        await file.OpenReadStream(1024000).CopyToAsync(fileOut);
+        User.ProfilePicture = fileOut.ToArray();
+        StateHasChanged();
+    }
+
 }

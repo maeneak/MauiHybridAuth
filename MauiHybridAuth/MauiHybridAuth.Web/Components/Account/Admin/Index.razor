@@ -29,8 +29,8 @@
                         <PropertyColumn Property="x => x.Roles" Title="User Roles">
                             <EditTemplate> 
                                 <MudSelectExtended @bind-SelectedValues="@context.Item.Roles" Label="User Roles" Dense Variant="Variant.Outlined"
-                                                    MultiSelection="true" ChipVariant="Variant.Filled" ChipCloseable ChipSize="Size.Small" ItemCollection="roleNames"
-                                                    ValuePresenter="valuePresenter" Color="Color.Info" />
+                                MultiSelection="true" ChipVariant="Variant.Filled" ChipCloseable ChipSize="Size.Small" ItemCollection="roleNames"
+                                ValuePresenter="valuePresenter" Color="Color.Info" />
                             </EditTemplate>
                             <CellTemplate>
                                 @if (context.Item.UserRoles != null)
@@ -45,7 +45,7 @@
                         <TemplateColumn Sortable="false" Filterable="false">
                             <CellTemplate>
                                 <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small"
-                                         AriaLabel="User menu">
+                                AriaLabel="User menu">
                                     <MudMenuItem Label="Edit" OnClick="@(()=>EditUserAsync(context.Item))" />
                                     <MudMenuItem Label="Delete" />
                                 </MudMenu>
@@ -103,14 +103,18 @@
     private async Task EditUserAsync(ApplicationUser user)
     {
         var parameters = new DialogParameters<UserFormDialog> { { x => x.User, user } };
+        var options = new DialogOptions{CloseButton=true};
 
-        var dialog = await DialogService.ShowAsync<UserFormDialog>(user.Email, parameters);
+        var dialog = await DialogService.ShowAsync<UserFormDialog>(user.Email, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
-            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
-            //Guid.TryParse(result.Data.ToString(), out Guid deletedServer);
+            if(result.Data != null)
+                {
+                    await userManager.UpdateAsync((ApplicationUser)result.Data);
+                    await UpdateUsers();
+                }
         }
     }
 
