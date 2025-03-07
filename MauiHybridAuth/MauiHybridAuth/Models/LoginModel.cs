@@ -13,8 +13,5 @@ namespace MauiHybridAuth.Models
         [Display(Name = "Password")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-
-        public string LoginFailureMessage { get; set; } = "Invalid Email or Password. Please try again.";
-        
     }
 }

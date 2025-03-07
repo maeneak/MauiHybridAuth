@@ -15,6 +15,7 @@ namespace MauiHybridAuth.Services
     public interface ICustomAuthenticationStateProvider
     {
         public LoginStatus LoginStatus { get; set; }
+        public string LoginFailureMessage { get; set; }
         public AccessTokenInfo? AccessTokenInfo { get; }
         Task<AuthenticationState> GetAuthenticationStateAsync();
         Task LogInAsync(LoginModel loginModel);
@@ -32,6 +33,8 @@ namespace MauiHybridAuth.Services
         private const int TokenExpirationBuffer = 30; //minutes
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
+        public string LoginFailureMessage { get; set; } = "";
+        
         private ClaimsPrincipal _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
         private AccessTokenInfo? _accessToken;
         public AccessTokenInfo? AccessTokenInfo
@@ -89,13 +92,21 @@ namespace MauiHybridAuth.Services
                     // Save token to secure storage so the user doesn't have to login every time
                     var token = await response.Content.ReadAsStringAsync();
                     _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, loginModel.Email);
-                                        
+
                     authenticatedUser = CreateAuthenticatedUser(loginModel.Email);
-                }               
+                    LoginStatus = LoginStatus.Success;
+                }
+                else
+                {
+                    LoginFailureMessage = "Invalid Email or Password. Please try again.";
+                    LoginStatus = LoginStatus.Failed;
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error logging in: {ex}");                
+                Debug.WriteLine($"Error logging in: {ex}");
+                LoginFailureMessage = "Server error.";
+                LoginStatus = LoginStatus.Failed;
             }
 
             return authenticatedUser;
