@@ -7,9 +7,9 @@ namespace MauiHybridAuth.Services
 {
     public class WeatherService : IWeatherService
     {
-        private readonly ICustomAuthenticationStateProvider _authenticationStateProvider;
+        private readonly MauiAuthenticationStateProvider _authenticationStateProvider;
 
-        public WeatherService(ICustomAuthenticationStateProvider authenticationStateProvider)
+        public WeatherService(MauiAuthenticationStateProvider authenticationStateProvider)
         {
             _authenticationStateProvider = authenticationStateProvider;
         }

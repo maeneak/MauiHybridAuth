@@ -6,27 +6,12 @@ using System.Security.Claims;
 
 namespace MauiHybridAuth.Services
 {
-    public enum LoginStatus
-    {
-        None,
-        Success,
-        Failed
-    }
-    public interface ICustomAuthenticationStateProvider
-    {
-        public LoginStatus LoginStatus { get; set; }
-        public string LoginFailureMessage { get; set; }
-        public AccessTokenInfo? AccessTokenInfo { get; }
-        Task<AuthenticationState> GetAuthenticationStateAsync();
-        Task LogInAsync(LoginModel loginModel);
-        void Logout();
-    }
     /// <summary>
     /// This class manages the authentication state of the user.
     /// The class handles user login, logout, and token validation, including refreshing tokens when they are close to expiration.
     /// It uses secure storage to save and retrieve tokens, ensuring that users do not need to log in every time.
     /// </summary>
-    public class MauiAuthenticationStateProvider : AuthenticationStateProvider, ICustomAuthenticationStateProvider
+    public class MauiAuthenticationStateProvider : AuthenticationStateProvider
     {
         //TODO: Place this in AppSettings or Client config file
         private const string AuthenticationType = "Custom authentication";
@@ -192,6 +177,5 @@ namespace MauiHybridAuth.Services
             var identity = new ClaimsIdentity(claims, AuthenticationType);
             return new ClaimsPrincipal(identity);
         }
-
     }
 }
