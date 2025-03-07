@@ -22,7 +22,7 @@ namespace MauiHybridAuth.Services
         void Logout();
     }
     /// <summary>
-    /// This class manages the authentication state of the user. 
+    /// This class manages the authentication state of the user.
     /// The class handles user login, logout, and token validation, including refreshing tokens when they are close to expiration.
     /// It uses secure storage to save and retrieve tokens, ensuring that users do not need to log in every time.
     /// </summary>
@@ -34,7 +34,7 @@ namespace MauiHybridAuth.Services
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
         public string LoginFailureMessage { get; set; } = "";
-        
+
         private ClaimsPrincipal _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
         private AccessTokenInfo? _accessToken;
         public AccessTokenInfo? AccessTokenInfo
@@ -45,8 +45,8 @@ namespace MauiHybridAuth.Services
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             //See if the token stored in SecureStorage is still valid and return the authentications state of the user
-            return await CheckTokenAsync();             
-        }  
+            return await CheckTokenAsync();
+        }
 
         public void Logout()
         {
@@ -72,7 +72,7 @@ namespace MauiHybridAuth.Services
                 return new AuthenticationState(_currentUser);
             }
         }
-                       
+
         private async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginModel loginModel)
         {
             ClaimsPrincipal authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
@@ -136,22 +136,22 @@ namespace MauiHybridAuth.Services
             {
                 _accessToken = await TokenStorage.GetTokenFromSecureStorageAsync();
 
-                if (_accessToken?.LoginToken != null)                
-                {                    
-                    if (DateTime.UtcNow < _accessToken.TokenExpiration) 
+                if (_accessToken?.LoginToken != null)
+                {
+                    if (DateTime.UtcNow < _accessToken.TokenExpiration)
                     {
                         if (DateTime.UtcNow.AddMinutes(TokenExpirationBuffer) >= _accessToken.TokenExpiration)
-                        { 
+                        {
                             //If the token is close to expiration (within 30 minutes), refresh it automatically
                             await RefreshAccessTokenAsync(_accessToken.LoginToken.RefreshToken, _accessToken.Email);
                         }
-                        
+
                         authenticatedUser = CreateAuthenticatedUser(_accessToken.Email);
                         LoginStatus = LoginStatus.Success;
                     }
                 }
                 if (LoginStatus != LoginStatus.Success)
-                {                   
+                {
                     Logout();
                 }
             }
@@ -183,7 +183,7 @@ namespace MauiHybridAuth.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error refreshing access token: {ex}");
-            }  
+            }
         }
 
         private ClaimsPrincipal CreateAuthenticatedUser(string email)

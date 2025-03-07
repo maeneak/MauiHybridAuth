@@ -23,17 +23,17 @@
     </div>
 </EditForm>
 
-@code {    
-    
+@code {
+
     private LoginModel LoginModel { get; set; } = new();
     private bool loginFailureHidden = true;
 
-    protected override void OnInitialized()    {
-
+    protected override void OnInitialized()
+    {
         if (AuthStateProvider.LoginStatus == LoginStatus.Failed)
-        {            
+        {
             loginFailureHidden = false;
-        }        
+        }
     }
 
     private async Task LoginUser()
@@ -44,8 +44,8 @@
         {
             loginFailureHidden = false;
             return;
-        }        
-        
+        }
+
         Navigation.NavigateTo(""); //Root URL
     }
 }

@@ -1,4 +1,4 @@
-﻿using MauiHybridAuth.Services;
+using MauiHybridAuth.Services;
 using MauiHybridAuth.Shared.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
@@ -30,7 +30,7 @@ namespace MauiHybridAuth
             // This is our custom provider
             builder.Services.AddScoped<ICustomAuthenticationStateProvider, MauiAuthenticationStateProvider>();
             // Use our custom provider when the app needs an AuthenticationStateProvider
-            builder.Services.AddScoped<AuthenticationStateProvider>(s 
+            builder.Services.AddScoped<AuthenticationStateProvider>(s
                 => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 
             // Add device-specific services used by the MauiHybridAuth.Shared project

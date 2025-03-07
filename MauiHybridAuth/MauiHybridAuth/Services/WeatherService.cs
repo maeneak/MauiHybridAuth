@@ -33,16 +33,16 @@ namespace MauiHybridAuth.Services
                 }
                 else
                 {
-                    Debug.WriteLine("Token or scheme is null or empty.");                  
+                    Debug.WriteLine("Token or scheme is null or empty.");
                 }
             }
             catch (HttpRequestException httpEx)
             {
-                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");                
+                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred: {ex.Message}");                
+                Debug.WriteLine($"An error occurred: {ex.Message}");
             }
             return forecasts;
         }
