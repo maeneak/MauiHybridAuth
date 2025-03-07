@@ -33,10 +33,10 @@ namespace MauiHybridAuth.Services
                 return _currentAuthState;
             }
 
-            var authStateTask = CreateAuthenticationStateFromSecureStorageAsync();
-            NotifyAuthenticationStateChanged(authStateTask);
+            _currentAuthState = CreateAuthenticationStateFromSecureStorageAsync();
+            NotifyAuthenticationStateChanged(_currentAuthState);
 
-            return authStateTask;
+            return _currentAuthState;
         }
 
         public async Task<AccessTokenInfo?> GetAccessTokenInfoAsync()
@@ -46,6 +46,7 @@ namespace MauiHybridAuth.Services
                 return _accessToken;
             }
 
+            Logout();
             return null;
         }
 
@@ -60,10 +61,10 @@ namespace MauiHybridAuth.Services
 
         public Task LogInAsync(LoginRequest loginModel)
         {
-            var loginTask = LogInAsyncCore(loginModel);
-            NotifyAuthenticationStateChanged(loginTask);
+            _currentAuthState = LogInAsyncCore(loginModel);
+            NotifyAuthenticationStateChanged(_currentAuthState);
 
-            return loginTask;
+            return _currentAuthState;
 
             async Task<AuthenticationState> LogInAsyncCore(LoginRequest loginModel)
             {
@@ -120,10 +121,6 @@ namespace MauiHybridAuth.Services
             {
                 authenticatedUser = CreateAuthenticatedUser(_accessToken!.Email);
                 LoginStatus = LoginStatus.Success;
-            }
-            else
-            {
-                Logout();
             }
 
             return new AuthenticationState(authenticatedUser);
