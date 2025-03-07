@@ -22,8 +22,8 @@
                 return _baseUrl;
             } 
         }
-        public static string LoginUrl => $"{BaseUrl}login";
-        public static string RefreshUrl => $"{BaseUrl}refresh";
+        public static string LoginUrl => $"{BaseUrl}identity/login";
+        public static string RefreshUrl => $"{BaseUrl}identity/refresh";
         public static string WeatherUrl => $"{BaseUrl}api/weather";
 
         public static HttpClient GetHttpClient()

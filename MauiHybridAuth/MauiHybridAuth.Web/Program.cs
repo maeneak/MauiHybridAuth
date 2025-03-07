@@ -53,9 +53,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//Needed for external clients to log in
-app.MapIdentityApi<ApplicationUser>();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -86,6 +83,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
 
+// Needed for external clients to log in
+app.MapGroup("/identity").MapIdentityApi<ApplicationUser>();
+// Needed for Identity Blazor components
 app.MapAdditionalIdentityEndpoints();
 
 //Add the weather API endpoint and require authorization
