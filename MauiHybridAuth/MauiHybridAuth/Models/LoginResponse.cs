@@ -3,19 +3,9 @@
 namespace MauiHybridAuth.Models
 {
     /// <summary>
-    /// This class represents the information related to an access token.
-    /// </summary>
-    public class AccessTokenInfo
-    {
-        public required string Email { get; set; }
-        public required LoginToken LoginToken { get; set; }
-        public required DateTime TokenExpiration { get; set; }
-    }
-
-    /// <summary>
     /// This class is used to store the token information received from the server.
     /// </summary>
-    public class LoginToken
+    public class LoginResponse
     {
         [JsonPropertyName("tokenType")]
         public required string TokenType { get; set; }
@@ -29,5 +19,4 @@ namespace MauiHybridAuth.Models
         [JsonPropertyName("refreshToken")]
         public required string RefreshToken { get; set; }
     }
-
 }

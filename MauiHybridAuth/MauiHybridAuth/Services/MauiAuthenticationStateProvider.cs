@@ -17,50 +17,64 @@ namespace MauiHybridAuth.Services
         private const string AuthenticationType = "Custom authentication";
         private const int TokenExpirationBuffer = 30; //minutes
 
+        private static ClaimsPrincipal _defaultUser = new ClaimsPrincipal(new ClaimsIdentity());
+        private static Task<AuthenticationState> _defaultAuthState = Task.FromResult(new AuthenticationState(_defaultUser));
+
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
         public string LoginFailureMessage { get; set; } = "";
 
-        private ClaimsPrincipal _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+        private Task<AuthenticationState> _currentAuthState = _defaultAuthState;
         private AccessTokenInfo? _accessToken;
-        public AccessTokenInfo? AccessTokenInfo
+
+        public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            get => _accessToken;
+            if (_currentAuthState != _defaultAuthState)
+            {
+                return _currentAuthState;
+            }
+
+            var authStateTask = CreateAuthenticationStateFromSecureStorageAsync();
+            NotifyAuthenticationStateChanged(authStateTask);
+
+            return authStateTask;
         }
 
-        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        public async Task<AccessTokenInfo?> GetAccessTokenInfoAsync()
         {
-            //See if the token stored in SecureStorage is still valid and return the authentications state of the user
-            return await CheckTokenAsync();
+            if (await UpdateAndValidateAccessTokenAsync())
+            {
+                return _accessToken;
+            }
+
+            return null;
         }
 
         public void Logout()
         {
             LoginStatus = LoginStatus.None;
-            _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+            _currentAuthState = _defaultAuthState;
             _accessToken = null;
             TokenStorage.RemoveToken();
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentUser)));
+            NotifyAuthenticationStateChanged(_defaultAuthState);
         }
 
-        public Task LogInAsync(LoginModel loginModel)
+        public Task LogInAsync(LoginRequest loginModel)
         {
             var loginTask = LogInAsyncCore(loginModel);
             NotifyAuthenticationStateChanged(loginTask);
 
             return loginTask;
 
-            async Task<AuthenticationState> LogInAsyncCore(LoginModel loginModel)
+            async Task<AuthenticationState> LogInAsyncCore(LoginRequest loginModel)
             {
                 var user = await LoginWithProviderAsync(loginModel);
-                _currentUser = user;
-
-                return new AuthenticationState(_currentUser);
+                return new AuthenticationState(user);
             }
         }
 
-        private async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginModel loginModel)
+        private async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginRequest loginModel)
         {
-            ClaimsPrincipal authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
+            var authenticatedUser = _defaultUser;
             LoginStatus = LoginStatus.None;
 
             try
@@ -97,58 +111,58 @@ namespace MauiHybridAuth.Services
             return authenticatedUser;
         }
 
-        public Task<AuthenticationState> CheckTokenAsync()
+        private async Task<AuthenticationState> CreateAuthenticationStateFromSecureStorageAsync()
         {
-            var checkTask = CheckTokenAsyncCore();
-            NotifyAuthenticationStateChanged(checkTask);
-
-            return checkTask;
-
-            async Task<AuthenticationState> CheckTokenAsyncCore()
-            {
-                var user = await CheckTokenValidityAsync();
-                _currentUser = user;
-
-                return new AuthenticationState(_currentUser);
-            }
-        }
-        private async Task<ClaimsPrincipal> CheckTokenValidityAsync()
-        {
-            ClaimsPrincipal authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
+            var authenticatedUser = _defaultUser;
             LoginStatus = LoginStatus.None;
 
+            if (await UpdateAndValidateAccessTokenAsync())
+            {
+                authenticatedUser = CreateAuthenticatedUser(_accessToken!.Email);
+                LoginStatus = LoginStatus.Success;
+            }
+            else
+            {
+                Logout();
+            }
+
+            return new AuthenticationState(authenticatedUser);
+        }
+
+        private async Task<bool> UpdateAndValidateAccessTokenAsync()
+        {
             try
             {
-                _accessToken = await TokenStorage.GetTokenFromSecureStorageAsync();
+                var now = DateTime.UtcNow;
+                var thirtyMinutesFromNow = now.AddMinutes(TokenExpirationBuffer);
 
-                if (_accessToken?.LoginToken != null)
+                if (_accessToken is null || thirtyMinutesFromNow > _accessToken.AccessTokenExpiration)
                 {
-                    if (DateTime.UtcNow < _accessToken.TokenExpiration)
-                    {
-                        if (DateTime.UtcNow.AddMinutes(TokenExpirationBuffer) >= _accessToken.TokenExpiration)
-                        {
-                            //If the token is close to expiration (within 30 minutes), refresh it automatically
-                            await RefreshAccessTokenAsync(_accessToken.LoginToken.RefreshToken, _accessToken.Email);
-                        }
+                    _accessToken = await TokenStorage.GetTokenFromSecureStorageAsync();
+                }
 
-                        authenticatedUser = CreateAuthenticatedUser(_accessToken.Email);
-                        LoginStatus = LoginStatus.Success;
-                    }
-                }
-                if (LoginStatus != LoginStatus.Success)
+                if (_accessToken is null)
                 {
-                    Logout();
+                    return false;
                 }
+
+                // The refresh token expiration is unknown, so we always try to refresh even if the access token expires. It defaults to 14 days.
+                // However, we start trying to refresh the access token 30 minutes before it expires to avoid race conditions.
+                if (thirtyMinutesFromNow >= _accessToken.AccessTokenExpiration)
+                {
+                    return await RefreshAccessTokenAsync(_accessToken.LoginResponse.RefreshToken, _accessToken.Email);
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error checking token for validity: {ex}");
+                return false;
             }
-
-            return authenticatedUser;
         }
 
-        private async Task RefreshAccessTokenAsync(string refreshToken, string email)
+        private async Task<bool> RefreshAccessTokenAsync(string refreshToken, string email)
         {
             try
             {
@@ -158,16 +172,18 @@ namespace MauiHybridAuth.Services
                     var httpClient = HttpClientHelper.GetHttpClient();
                     var refreshData = new { refreshToken };
                     var response = await httpClient.PostAsJsonAsync(HttpClientHelper.RefreshUrl, refreshData);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var token = await response.Content.ReadAsStringAsync();
-                        _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
-                    }
+                    response.EnsureSuccessStatusCode();
+                    var token = await response.Content.ReadAsStringAsync();
+                    _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
+                    return true;
                 }
+
+                return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error refreshing access token: {ex}");
+                throw;
             }
         }
 

@@ -2,16 +2,16 @@
 
 namespace MauiHybridAuth.Models
 {
-    public class LoginModel
+    public class LoginRequest
     {
         [Required]
         [Display(Name = "Email Address")]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = "";
 
         [Required]
         [Display(Name = "Password")]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string Password { get; set; } = "";
     }
 }
