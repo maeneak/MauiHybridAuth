@@ -10,7 +10,7 @@
         <MudSpacer/>
         <MudIcon Icon="@Icons.Material.Filled.Settings" />
     </MudStack>
-    <AuthorizeView>
+    <AuthorizeView >
         <Authorized>
             <MudStack Row Justify="Justify.Center" Spacing="5">
                 <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
@@ -23,7 +23,7 @@
                             }
                             else
                             {
-                                <MudText>@CurrentUser.Initials</MudText>
+                                <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
                             }
                         }
                         else
@@ -40,6 +40,7 @@
                         <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
                         <form action="Account/Logout" method="post">
                             <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="" />
                             <button type="submit" class="mud-link mud-ripple">
                                 <MudLink Typo="Typo.body2">Logout</MudLink>
                             </button>
@@ -55,6 +56,7 @@
             </MudStack>
         </NotAuthorized>
     </AuthorizeView>
+    <MudLink Href="/Admin" Typo="Typo.body2">Manage users</MudLink>
     <MudSpacer />
     <MudStack Row Justify="Justify.FlexEnd" Class="pa-0 ma-0">
         <MudIconButton Icon="@CustomAppTheme.Icon" OnClick="@((e) => ColorModeToggle())" Size="Size.Large" title="Color Mode" />

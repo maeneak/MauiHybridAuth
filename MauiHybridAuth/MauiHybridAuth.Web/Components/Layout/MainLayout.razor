@@ -1,10 +1,12 @@
-﻿@using MauiHybridAuth.Shared.Theme
+﻿@implements IDisposable
+@using MauiHybridAuth.Shared.Theme
 @using MauiHybridAuth.Web.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -29,7 +31,7 @@
                                 }
                                 else
                                 {
-                                    <MudText>@CurrentUser.Initials</MudText>
+                                    <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
                                 }
                             }
                             else
@@ -52,7 +54,8 @@
     <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
     </MudDrawer>
-    <MudDrawer Width="320px" Class="pa-2 pl-5 pr-5" @bind-Open="ProfileDrawerOpen" Variant="DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2">
+    <MudDrawer Width="320px" Class="pa-2 pl-5 pr-5" @bind-Open="ProfileDrawerOpen" Variant="DrawerVariant.Temporary" 
+    ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" OverlayAutoClose="true">
         <CascadingValue Value="CurrentUser">
             <ProfileMenu />
         </CascadingValue>
@@ -80,6 +83,7 @@
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        NavigationManager.LocationChanged += OnLocationChanged;
         await UpdateUser();
     }
 
@@ -98,6 +102,13 @@
         }
     }
 
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        ProfileDrawerOpen = false;
+        StateHasChanged();
+
+    }
+
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
         await UpdateUser();
@@ -112,5 +123,9 @@
     private void ProfileDrawerToggle()
     {
         ProfileDrawerOpen = !ProfileDrawerOpen;
+    }
+    void IDisposable.Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
