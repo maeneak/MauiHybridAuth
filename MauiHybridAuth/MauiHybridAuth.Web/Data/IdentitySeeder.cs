@@ -11,7 +11,7 @@
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             // Define roles to seed
-            var roles = new[] { "Admin", "Driver", "Master", "Engineer", "Crew", "Manager", "Observer" };
+            var roles = new[] { "Admin", "User" };
 
             // Seed roles
             foreach (var role in roles)
@@ -23,7 +23,7 @@
             }
 
             // Define the admin user details
-            var adminEmail = "admin@fleet.email";
+            var adminEmail = "admin@app.email";
             var adminPassword = "Admin@123";
 
             // Check if the admin user already exists

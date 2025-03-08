@@ -1,7 +1,9 @@
 ﻿@using MauiHybridAuth.Web.Data
+@using Microsoft.AspNetCore.Identity
 @inject ISnackbar Snackbar
+@inject UserManager<ApplicationUser> userManager
 
-<MudDialog>
+<MudDialog Style="">
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Class="mr-3 mb-n1" />
@@ -9,34 +11,53 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudGrid>
-            <MudItem xs="12">
+        <MudGrid Spacing="4">
+            <MudItem xs="12" sm="6">
                 <MudImage Width="88" Height="88" Src="@User.ProfilePictureBase64" FallbackSrc="_content/MauiHybridAuth.Shared/img/profile.png" />
                 <MudStack Row>
                     <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="ChangeProfilePicture" MaximumFileCount="100">
                         <ActivatorContent>
                             <MudIconButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
-                            Icon="@Icons.Material.Filled.FileUpload"/>
+                            Icon="@Icons.Material.Filled.FileUpload" />
                         </ActivatorContent>
                     </MudFileUpload>
                     <MudIconButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
-                        Icon="@Icons.Material.Filled.Delete" OnClick="ResetProfilePicture"/>
+                    Icon="@Icons.Material.Filled.Delete" OnClick="ResetProfilePicture" />
                 </MudStack>
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="First Name" @bind-Value="User.FirstName" />
+                <MudStack Spacing="1" AlignItems="AlignItems.End">
+                    <MudLink Disabled="@(!EmailConfirmationRequired)" Typo="Typo.body2" Color="Color.Info">Re-send email confirmation</MudLink>
+                    <MudLink Disabled="@(!EmailConfirmationRequired)" Typo="Typo.body2" Color="Color.Error">Manually confirm account</MudLink>
+                    <MudLink Typo="Typo.body2" Color="Color.Warning" OnClick="ToggleUserLockout">
+                        @(UserLocked ? "Unlock account" : "Lock account")
+                    </MudLink>
+                    @if(UserLocked) {
+                        <MudAlert Dense Severity="Severity.Warning">User locked till: @(User.LockoutEnd.GetValueOrDefault().ToString("d") )</MudAlert>
+                    } else {
+                        <MudAlert Dense Severity="Severity.Success">User unlocked.</MudAlert>
+                    }
+                </MudStack>
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Last Name" @bind-Value="User.LastName" />
+                <MudTextField Label="First Name" @bind-Value="User.FirstName" Variant="Variant.Text" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Username" @bind-Value="User.UserName" />
+                <MudTextField Label="Last Name" @bind-Value="User.LastName" Variant="Variant.Text" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField Label="Email" @bind-Value="User.Email" Variant="Variant.Text" Error="@EmailConfirmationRequired" ErrorText="@(EmailConfirmationRequired ? "Not confirmed" : "")" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Email" @bind-Value="User.Email" />
+                <MudTextField Label="Username" @bind-Value="User.UserName" Variant="Variant.Text" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Mobile" @bind-Value="User.PhoneNumber" />
+                <MudTextField Label="Mobile" @bind-Value="User.PhoneNumber" Variant="Variant.Text" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudSelectExtended @bind-SelectedValues="User.Roles" Label="User Roles" Dense Variant="Variant.Text"
+                MultiSelection="true" ChipVariant="Variant.Filled" ChipCloseable ChipSize="Size.Small" ItemCollection="Roles"
+                ValuePresenter="ValuePresenter.Chip" Color="Color.Info" />
             </MudItem>
         </MudGrid>
     </DialogContent>
@@ -52,12 +73,24 @@
 
     [Parameter]
     public ApplicationUser User { get; set; } = new ApplicationUser();
+    [Parameter]
+    public List<string> Roles { get; set; } = new List<string>();
 
     private void Cancel() => MudDialog.Cancel();
+
+    private bool EmailConfirmationRequired => userManager.Options.SignIn.RequireConfirmedEmail && !User.EmailConfirmed;
 
     private void SaveUser()
     {
         MudDialog.Close(User);
+    }
+
+    private bool UserLocked => User.LockoutEnabled && (User.LockoutEnd != null || User.LockoutEnd > DateTime.UtcNow);
+
+    private async void ToggleUserLockout()
+    {
+        await userManager.SetLockoutEndDateAsync(User, UserLocked ? null : DateTimeOffset.MaxValue);
+        StateHasChanged();
     }
 
     private void ResetProfilePicture()
