@@ -18,9 +18,6 @@ namespace MauiHybridAuth
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-            // Add device-specific services used by the MauiHybridAuth.Shared project
-            builder.Services.AddSingleton<IFormFactor, FormFactor>();
-
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
 
@@ -37,6 +34,10 @@ namespace MauiHybridAuth
             // Use our custom provider when the app needs an AuthenticationStateProvider
             builder.Services.AddScoped<AuthenticationStateProvider>(s
                 => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
+
+            // Add device-specific services used by the MauiHybridAuth.Shared project
+            builder.Services.AddSingleton<IFormFactor, FormFactor>();
+            builder.Services.AddScoped<IWeatherService, WeatherService>();
 
             return builder.Build();
         }

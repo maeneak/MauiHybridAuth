@@ -15,41 +15,46 @@ namespace MauiHybridAuth.Services
     public interface ICustomAuthenticationStateProvider
     {
         public LoginStatus LoginStatus { get; set; }
+        public AccessTokenInfo? AccessTokenInfo { get; }
         Task<AuthenticationState> GetAuthenticationStateAsync();
         Task LogInAsync(LoginModel loginModel);
         void Logout();
         Task RegisterAsync(string registerUrl); // Add this method to the interface
     }
+    /// <summary>
+    /// This class manages the authentication state of the user. 
+    /// The class handles user login, logout, and token validation, including refreshing tokens when they are close to expiration.
+    /// It uses secure storage to save and retrieve tokens, ensuring that users do not need to log in every time.
+    /// </summary>
     public class MauiAuthenticationStateProvider : AuthenticationStateProvider, ICustomAuthenticationStateProvider
     {
         //TODO: Place this in AppSettings or Client config file
-        protected string LoginUri { get; set; } = "https://localhost:7157/login";
-        protected string RegisterUri { get; set; } = "https://localhost:7157/Account/Register";
+        private const string AuthenticationType = "Custom authentication";
+        private const int TokenExpirationBuffer = 30; //minutes
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
-        protected ClaimsPrincipal currentUser = new(new ClaimsIdentity());
-
-        public MauiAuthenticationStateProvider()
+        private ClaimsPrincipal _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+        private AccessTokenInfo? _accessToken;
+        public AccessTokenInfo? AccessTokenInfo
         {
-            //See: https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services
-            //Android Emulator uses 10.0.2.2 to refer to localhost            
-            LoginUri =
-                DeviceInfo.Platform == DevicePlatform.Android ? LoginUri.Replace("localhost", "10.0.2.2") : LoginUri;
-            RegisterUri =
-                DeviceInfo.Platform == DevicePlatform.Android ? RegisterUri.Replace("localhost", "10.0.2.2") : RegisterUri;
+            get => _accessToken;
         }
 
-        private HttpClient GetHttpClient()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-#if WINDOWS || MACCATALYST
-            return new HttpClient();
-#else
-            return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler());
-#endif
-        }
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync() =>
-            Task.FromResult(new AuthenticationState(currentUser));
+            //See if the token stored in SecureStorage is still valid and return the authentications state of the user
+            return await CheckTokenAsync();             
+        }  
+
+        public void Logout()
+        {
+            LoginStatus = LoginStatus.None;
+            _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
+            _accessToken = null;
+            TokenStorage.RemoveToken();
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentUser)));
+        }
 
         public Task LogInAsync(LoginModel loginModel)
         {
@@ -61,97 +66,123 @@ namespace MauiHybridAuth.Services
             async Task<AuthenticationState> LogInAsyncCore(LoginModel loginModel)
             {
                 var user = await LoginWithProviderAsync(loginModel);
-                currentUser = user;
+                _currentUser = user;
 
-                return new AuthenticationState(currentUser);
-            }
-        }
-        public void Logout()
-        {
-            LoginStatus = LoginStatus.None;
-            currentUser = new ClaimsPrincipal(new ClaimsIdentity());
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(currentUser)));
-        }
-
-        public async Task RegisterAsync(string registerUrl = "")
-        {
-            if (registerUrl == "") registerUrl = RegisterUri;
-
-            if (Uri.TryCreate(registerUrl, UriKind.Absolute, out var uri))
-            {
-                await Launcher.OpenAsync(uri);
-            }
-            else
-            {
-                Debug.WriteLine($"Invalid URL: {registerUrl}");
+                return new AuthenticationState(_currentUser);
             }
         }
 
         private async Task<ClaimsPrincipal> LoginWithProviderAsync(LoginModel loginModel)
         {
-            ClaimsPrincipal authenticatedUser;
+            ClaimsPrincipal authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
             LoginStatus = LoginStatus.None;
 
             try
             {
-                var httpClient = GetHttpClient();
+                //Call the Login endpoint and pass the email and password
+                var httpClient = HttpClientHelper.GetHttpClient();
                 var loginData = new { loginModel.Email, loginModel.Password };
-                var response = await httpClient.PostAsJsonAsync(LoginUri, loginData);
+                var response = await httpClient.PostAsJsonAsync(HttpClientHelper.LoginUrl, loginData);
 
                 LoginStatus = response.IsSuccessStatusCode ? LoginStatus.Success : LoginStatus.Failed;
 
                 if (LoginStatus == LoginStatus.Success)
                 {
-                    //var token = response.Content.ReadAsStringAsync().Result;
-                    var claims = new[] { new Claim(ClaimTypes.Name, loginModel.Email) };
-                    var identity = new ClaimsIdentity(claims, "Custom authentication");
-
-                    authenticatedUser = new ClaimsPrincipal(identity);
-                }
-                else
-                    authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
+                    // Save token to secure storage so the user doesn't have to login every time
+                    var token = await response.Content.ReadAsStringAsync();
+                    _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, loginModel.Email);
+                                        
+                    authenticatedUser = CreateAuthenticatedUser(loginModel.Email);
+                }               
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error logging in: {ex}");
-                authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
+                Debug.WriteLine($"Error logging in: {ex}");                
             }
 
             return authenticatedUser;
         }
 
-    }
-
-    public class HttpsClientHandlerService
-    {
-        public HttpMessageHandler GetPlatformMessageHandler()
+        public Task<AuthenticationState> CheckTokenAsync()
         {
-#if ANDROID
-            var handler = new Xamarin.Android.Net.AndroidMessageHandler();
-            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+            var checkTask = CheckTokenAsyncCore();
+            NotifyAuthenticationStateChanged(checkTask);
+
+            return checkTask;
+
+            async Task<AuthenticationState> CheckTokenAsyncCore()
             {
-                if (cert != null && cert.Issuer.Equals("CN=localhost"))
-                    return true;
-                return errors == System.Net.Security.SslPolicyErrors.None;
-            };
-            return handler;
-#elif IOS
-            var handler = new NSUrlSessionHandler
+                var user = await CheckTokenValidityAsync();
+                _currentUser = user;
+
+                return new AuthenticationState(_currentUser);
+            }
+        }
+        private async Task<ClaimsPrincipal> CheckTokenValidityAsync()
+        {
+            ClaimsPrincipal authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity());
+            LoginStatus = LoginStatus.None;
+
+            try
             {
-                TrustOverrideForUrl = IsHttpsLocalhost
-            };
-            return handler;
-#else
-            throw new PlatformNotSupportedException("Only Android and iOS supported.");
-#endif
+                _accessToken = await TokenStorage.GetTokenFromSecureStorageAsync();
+
+                if (_accessToken?.LoginToken != null)                
+                {                    
+                    if (DateTime.UtcNow < _accessToken.TokenExpiration) 
+                    {
+                        if (DateTime.UtcNow.AddMinutes(TokenExpirationBuffer) >= _accessToken.TokenExpiration)
+                        { 
+                            //If the token is close to expiration (within 30 minutes), refresh it automatically
+                            await RefreshAccessTokenAsync(_accessToken.LoginToken.RefreshToken, _accessToken.Email);
+                        }
+                        
+                        authenticatedUser = CreateAuthenticatedUser(_accessToken.Email);
+                        LoginStatus = LoginStatus.Success;
+                    }
+                }
+                if (LoginStatus != LoginStatus.Success)
+                {                   
+                    Logout();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Debug.WriteLine($"Error checking token for validity: {ex}");
+            }
+
+            return authenticatedUser;
         }
 
-#if IOS
-        public static bool IsHttpsLocalhost(NSUrlSessionHandler sender, string url, Security.SecTrust trust)
+        private async Task RefreshAccessTokenAsync(string refreshToken, string email)
         {
-            return url.StartsWith("https://localhost");
+            try
+            {
+                if (refreshToken != null)
+                {
+                    //Call the Refresh endpoint and pass the refresh token
+                    var httpClient = HttpClientHelper.GetHttpClient();
+                    var refreshData = new { refreshToken };
+                    var response = await httpClient.PostAsJsonAsync(HttpClientHelper.RefreshUrl, refreshData);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var token = await response.Content.ReadAsStringAsync();
+                        _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error refreshing access token: {ex}");
+            }  
         }
-#endif
-    }
 
+        private ClaimsPrincipal CreateAuthenticatedUser(string email)
+        {
+            var claims = new[] { new Claim(ClaimTypes.Name, email) };  //TODO: Add more claims as needed
+            var identity = new ClaimsIdentity(claims, AuthenticationType);
+            return new ClaimsPrincipal(identity);
+        }
+    }
 }

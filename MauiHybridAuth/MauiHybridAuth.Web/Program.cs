@@ -24,6 +24,7 @@ builder.Services.AddMudServices();
 builder.Services.AddMudExtensions();
 // Add device-specific services used by the MauiHybridAuth.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
+builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add Auth services used by the Web app
 builder.Services.AddCascadingAuthenticationState();
@@ -114,5 +115,12 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
 
 app.MapAdditionalIdentityEndpoints();
+
+//Add the weather API endpoint and require authorization
+app.MapGet("/api/weather", async (IWeatherService weatherService) =>
+{
+    var forecasts = await weatherService.GetWeatherForecastsAsync();
+    return Results.Ok(forecasts);
+}).RequireAuthorization();
 
 app.Run();
