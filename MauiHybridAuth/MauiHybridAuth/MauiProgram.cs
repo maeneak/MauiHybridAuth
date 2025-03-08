@@ -1,8 +1,8 @@
 ﻿using MauiHybridAuth.Services;
 using MauiHybridAuth.Shared.Services;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace MauiHybridAuth
 {
@@ -22,6 +22,7 @@ namespace MauiHybridAuth
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddMudServices();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
@@ -34,7 +35,7 @@ namespace MauiHybridAuth
             // This is our custom provider
             builder.Services.AddScoped<ICustomAuthenticationStateProvider, MauiAuthenticationStateProvider>();
             // Use our custom provider when the app needs an AuthenticationStateProvider
-            builder.Services.AddScoped<AuthenticationStateProvider>(s 
+            builder.Services.AddScoped<AuthenticationStateProvider>(s
                 => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 
             return builder.Build();

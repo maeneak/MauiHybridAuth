@@ -1,17 +1,18 @@
 ﻿@inherits LayoutComponentBase
-@layout MauiHybridAuth.Web.Components.Layout.MainLayout
+@layout AccountLayout
 
-<h1>Manage your account</h1>
-
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-lg-3">
-            <ManageNavMenu />
-        </div>
-        <div class="col-lg-9">
-            @Body
-        </div>
-    </div>
-</div>
+<MudStack style="width:100%" Row AlignItems="AlignItems.Start" StretchItems="StretchItems.Start" Justify="Justify.SpaceBetween">
+    <MudText Typo="Typo.h4" GutterBottom="true">Manage your account</MudText>
+    <MudSpacer />
+    <a href="/">
+        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Large" />
+    </a>
+</MudStack>
+<MudGrid>
+    <MudItem xs="12">
+        <ManageNavMenu />
+    </MudItem>
+    <MudItem xs="12" Class="pt-1">
+        @Body
+    </MudItem>
+</MudGrid>

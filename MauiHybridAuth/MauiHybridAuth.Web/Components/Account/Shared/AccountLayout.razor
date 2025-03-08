@@ -1,0 +1,33 @@
+﻿@using MauiHybridAuth.Shared.Theme
+@inherits LayoutComponentBase
+@* @layout MauiHybridAuth.Web.Components.Layout.MainLayout *@
+@inject NavigationManager NavigationManager
+
+<style>
+    body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    margin: auto;
+    height: 100vh;
+    justify-content: center;
+    background-color: rgba(55,55,64,1);
+    }
+</style>
+
+@if (HttpContext is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <MudPaper Elevation="2" Class="pl-6 pr-4 pb-6 pt-3 bodydiv" style="max-width:1080px; max-height:90%; overflow: scroll; min-height: 50%">
+        @Body
+    </MudPaper>
+}
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+}

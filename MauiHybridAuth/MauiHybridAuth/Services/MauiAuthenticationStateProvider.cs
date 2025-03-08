@@ -1,9 +1,8 @@
-using Microsoft.AspNetCore.Components.Authorization;
-using System.Threading.Tasks;
 using MauiHybridAuth.Models;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Security.Claims;
 
 namespace MauiHybridAuth.Services
 {
@@ -43,7 +42,7 @@ namespace MauiHybridAuth.Services
         private HttpClient GetHttpClient()
         {
 #if WINDOWS || MACCATALYST
-                return new HttpClient();
+            return new HttpClient();
 #else
             return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler());
 #endif
@@ -76,8 +75,8 @@ namespace MauiHybridAuth.Services
 
         public async Task RegisterAsync(string registerUrl = "")
         {
-            if(registerUrl == "") registerUrl = RegisterUri;
-            
+            if (registerUrl == "") registerUrl = RegisterUri;
+
             if (Uri.TryCreate(registerUrl, UriKind.Absolute, out var uri))
             {
                 await Launcher.OpenAsync(uri);
@@ -128,14 +127,14 @@ namespace MauiHybridAuth.Services
         public HttpMessageHandler GetPlatformMessageHandler()
         {
 #if ANDROID
-                var handler = new Xamarin.Android.Net.AndroidMessageHandler();
-                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
-                {
-                    if (cert != null && cert.Issuer.Equals("CN=localhost"))
-                        return true;
-                    return errors == System.Net.Security.SslPolicyErrors.None;
-                };
-                return handler;
+            var handler = new Xamarin.Android.Net.AndroidMessageHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+            {
+                if (cert != null && cert.Issuer.Equals("CN=localhost"))
+                    return true;
+                return errors == System.Net.Security.SslPolicyErrors.None;
+            };
+            return handler;
 #elif IOS
             var handler = new NSUrlSessionHandler
             {
@@ -143,7 +142,7 @@ namespace MauiHybridAuth.Services
             };
             return handler;
 #else
-                throw new PlatformNotSupportedException("Only Android and iOS supported.");
+            throw new PlatformNotSupportedException("Only Android and iOS supported.");
 #endif
         }
 

@@ -10,7 +10,13 @@
 
 <PageTitle>Confirm email</PageTitle>
 
-<h1>Confirm email</h1>
+<MudStack style="width:100%" Row StretchItems="StretchItems.Start" Justify="Justify.SpaceBetween">
+    <MudText Typo="Typo.h3" GutterBottom="true">Confirm email</MudText>
+    <MudSpacer />
+    <a href="/" title="Cancel">
+        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Large" />
+    </a>
+</MudStack>
 <StatusMessage Message="@statusMessage" />
 
 @code {

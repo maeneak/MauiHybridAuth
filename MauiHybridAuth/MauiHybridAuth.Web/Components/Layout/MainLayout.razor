@@ -1,23 +1,131 @@
-﻿@inherits LayoutComponentBase
+﻿@implements IDisposable
+@using MauiHybridAuth.Shared.Theme
+@using MauiHybridAuth.Web.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
-<div class="page">
-    <div class="sidebar">
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+<MudThemeProvider @bind-IsDarkMode="@CustomAppTheme.InDarkMode" />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@NavDrawerToggle" />
+        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudSpacer />
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <AuthorizeView>
+                <Authorized>
+                    <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
+                            @if (CurrentUser != null)
+                            {
+                                @if (CurrentUser.ProfilePicture?.Length > 0)
+                                {
+                                    <MudImage Src="@($"data:image/*;base64,{Convert.ToBase64String(CurrentUser.ProfilePicture)}")" />
+                                }
+                                else
+                                {
+                                    <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                                }
+                            }
+                            else
+                            {
+                                <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png"/>
+                            }
+                        </MudAvatar>
+                    </MudBadge>
+                </Authorized>
+                <NotAuthorized>
+                    <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
+                            <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                        </MudAvatar>
+                    </MudBadge>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudStack>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
-    </div>
+    </MudDrawer>
+    <MudDrawer Width="320px" Class="pa-2 pl-5 pr-5" @bind-Open="ProfileDrawerOpen" Variant="DrawerVariant.Temporary" 
+    ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" OverlayAutoClose="true">
+        <CascadingValue Value="CurrentUser">
+            <ProfileMenu />
+        </CascadingValue>
+    </MudDrawer>
+    <MudMainContent Class="mt-16 pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
+<div id="blazor-error-ui">
     An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+    [CascadingParameter]
+    private CustomAppTheme? CustomAppTheme { get; set; }
+    private ApplicationUser? CurrentUser { get; set; }
+    private bool ProfileDrawerOpen { get; set; } = false;
+    private bool _navDrawerOpen = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await UpdateUser();
+    }
+
+    private async Task UpdateUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            CurrentUser = await UserManager.GetUserAsync(user);
+        }
+        else
+        {
+            CurrentUser = null;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        ProfileDrawerOpen = false;
+        StateHasChanged();
+
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await UpdateUser();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void NavDrawerToggle()
+    {
+        _navDrawerOpen = !_navDrawerOpen;
+    }
+
+    private void ProfileDrawerToggle()
+    {
+        ProfileDrawerOpen = !ProfileDrawerOpen;
+    }
+    void IDisposable.Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

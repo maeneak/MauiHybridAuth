@@ -23,6 +23,7 @@
             ".vs/**/*",
             ".github/**/*",
             ".git/**/*",
+            "readme.md",
             ".gitattributes"
           ]
         }
