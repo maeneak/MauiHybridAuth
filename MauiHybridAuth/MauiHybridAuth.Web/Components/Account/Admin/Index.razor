@@ -18,14 +18,12 @@
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Application Users</MudText>
                         <MudSpacer />
-                        <MudIconButton Icon="@Icons.Material.Filled.PersonAdd" />
+                        <MudIconButton Icon="@Icons.Material.Filled.PersonAdd" OnClick="@(()=>EditUserAsync(null))" />
                     </ToolBarContent>
                     <Columns>
                         <PropertyColumn Property="x => x.FirstName" Title="Name" />
                         <PropertyColumn Property="x => x.LastName" Title="Surname" />
-                        <PropertyColumn Property="x => x.UserName" Title="Username" />
                         <PropertyColumn Property="x => x.Email" Title="Email" />
-                        <PropertyColumn Property="x => x.PhoneNumber" Title="Mobile" />
                         <PropertyColumn Property="x => x.Roles" Title="User Roles">
                             <EditTemplate> 
                                 <MudSelectExtended @bind-SelectedValues="@context.Item.Roles" Label="User Roles" Dense Variant="Variant.Outlined"
@@ -47,7 +45,7 @@
                                 <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small"
                                 AriaLabel="User menu">
                                     <MudMenuItem Label="Edit" OnClick="@(()=>EditUserAsync(context.Item))" />
-                                    <MudMenuItem Label="Delete" />
+                                    <MudMenuItem Label="Delete" OnClick="@(()=>DeleteUser(context.Item))" />
                                 </MudMenu>
                             </CellTemplate>
                         </TemplateColumn>
@@ -100,9 +98,13 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async Task EditUserAsync(ApplicationUser user)
+    private async Task EditUserAsync(ApplicationUser? user)
     {
-        var parameters = new DialogParameters<UserFormDialog> { { x => x.User, user } };
+        if (user == null) user = new ApplicationUser();
+        var parameters = new DialogParameters<UserFormDialog> ();
+        parameters.Add(x => x.User, user);
+        parameters.Add(x => x.Roles, roleNames);
+
         var options = new DialogOptions{CloseButton=true};
 
         var dialog = await DialogService.ShowAsync<UserFormDialog>(user.Email, parameters, options);
@@ -111,9 +113,17 @@
         if (!result.Canceled)
         {
             if(result.Data != null)
+            {
+                ApplicationUser returnedUser = (ApplicationUser)result.Data;
+                if (returnedUser.NormalizedEmail == null)
                 {
+                    await userManager.CreateAsync(returnedUser, "Fl33t101!");
+                    await SaveUserRoles(returnedUser);
+                }
+                else
                     await userManager.UpdateAsync((ApplicationUser)result.Data);
-                    await UpdateUsers();
+                
+                await UpdateUsers();
                 }
         }
     }

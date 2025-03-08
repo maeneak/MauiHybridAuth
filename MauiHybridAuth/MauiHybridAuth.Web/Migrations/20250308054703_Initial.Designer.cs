@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MauiHybridAuth.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250302140535_update1")]
-    partial class update1
+    [Migration("20250308054703_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
