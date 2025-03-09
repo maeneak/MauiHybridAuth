@@ -19,7 +19,6 @@ namespace MauiHybridAuth.Services
         Task<AuthenticationState> GetAuthenticationStateAsync();
         Task LogInAsync(LoginModel loginModel);
         void Logout();
-        Task RegisterAsync(string registerUrl); // Add this method to the interface
     }
     /// <summary>
     /// This class manages the authentication state of the user. 
