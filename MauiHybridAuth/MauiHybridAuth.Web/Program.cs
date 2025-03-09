@@ -47,6 +47,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
+    .AddApiEndpoints()
     .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>
@@ -60,16 +61,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-//builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 //Register needed elements for authentication:
-//builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
 
 var app = builder.Build();
 
 //Needed for external clients to log in
-//app.MapIdentityApi<ApplicationUser>();
+app.MapIdentityApi<ApplicationUser>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -93,9 +94,9 @@ if (app.Environment.IsDevelopment())
     //    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     //    dbContext.Database.Migrate();
     //}
-    //app.UseMigrationsEndPoint();
-    //app.UseSwagger();
-    //app.UseSwaggerUI();
+    app.UseMigrationsEndPoint();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
