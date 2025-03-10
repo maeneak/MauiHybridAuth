@@ -13,22 +13,22 @@
             {
 #if DEBUG
                 //See: https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services
-                //Android Emulator uses 10.0.2.2 to refer to localhost            
+                //Android Emulator uses 10.0.2.2 to refer to localhost
                 if (DeviceInfo.Platform == DevicePlatform.Android)
                 {
                     _baseUrl = _baseUrl.Replace("localhost", "10.0.2.2");
                 }
 #endif
                 return _baseUrl;
-            } 
+            }
         }
-        public static string LoginUrl => $"{BaseUrl}login";
-        public static string RefreshUrl => $"{BaseUrl}refresh";
+        public static string LoginUrl => $"{BaseUrl}identity/login";
+        public static string RefreshUrl => $"{BaseUrl}identity/refresh";
         public static string WeatherUrl => $"{BaseUrl}api/weather";
 
         public static HttpClient GetHttpClient()
         {
-#if WINDOWS || MACCATALYST 
+#if WINDOWS || MACCATALYST
             return new HttpClient();
 #else
             return new HttpClient(new HttpsClientHandlerService().GetPlatformMessageHandler());

@@ -1,10 +1,9 @@
 using MauiHybridAuth.Shared.Services;
 using MauiHybridAuth.Web.Components;
-using MauiHybridAuth.Web.Services;
-using MauiHybridAuth.Web.Data;
 using MauiHybridAuth.Web.Components.Account;
-using Microsoft.AspNetCore.Authorization.Policy;
-using Microsoft.AspNetCore.Authorization;
+using MauiHybridAuth.Web.Data;
+using MauiHybridAuth.Web.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +19,12 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add Auth services used by the Web app
+builder.Services.AddAuthentication(options =>
+{
+    // Ensure that unauthenticated clients redirect to the login page rather than receive a 401 by default.
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+});
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -30,19 +35,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-});
- 
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
-
 //Needed for external clients to log in
-builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -51,13 +45,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Register needed elements for authentication:
-builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
-
 var app = builder.Build();
-
-//Needed for external clients to log in
-app.MapIdentityApi<ApplicationUser>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -70,7 +58,7 @@ if (app.Environment.IsDevelopment())
     }
     app.UseMigrationsEndPoint();
     app.UseSwagger();
-    app.UseSwaggerUI();    
+    app.UseSwaggerUI();
 }
 else
 {
@@ -89,6 +77,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
 
+// Needed for external clients to log in
+app.MapGroup("/identity").MapIdentityApi<ApplicationUser>();
+// Needed for Identity Blazor components
 app.MapAdditionalIdentityEndpoints();
 
 //Add the weather API endpoint and require authorization

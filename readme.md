@@ -9,7 +9,7 @@ This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that 
 ## Running the sample
 1. Clone the repository.
 1. Make sure you have [.NET 9 installed and the MAUI workload](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation?view=net-maui-9.0&tabs=vswin).
-1. Open the solution in Visual Studio 2022 or VS Code with the .NET MAUI extension installed. 
+1. Open the solution in Visual Studio 2022 or VS Code with the .NET MAUI extension installed.
 1. Set the `MauiHybridAuth` MAUI project as the startup project.
 1. Start the `MauiHybridAuth.Web` project without debugging (in Visual Studio right-click on the project and select "Debug -> Start without Debugging").
 1. Register a user in the Blazor Web app UI or navigate to `https://localhost:7157/swagger` in your browser to pull up the identity endpoints and register a user using the `/Register` endpoint.
@@ -21,8 +21,8 @@ This sample demonstrates how to build .NET MAUI Blazor Hybrid and Web Apps that 
 1. Navigate the web app to `https://localhost:7157/` and the app will behave the same.
 
 ## Tour of the important parts
-### Shared UI 
-The shared UI is in the `MauiHybridAuth.Shared` project. This project contains the Razor components that are shared between the MAUI and Blazor Web projects (Home, Counter and Weather pages). The `Counter.razor` and `Weather.razor` pages are protected by the `[Authorize]` attribute so you cannot navigate to them unless you are logged in. 
+### Shared UI
+The shared UI is in the `MauiHybridAuth.Shared` project. This project contains the Razor components that are shared between the MAUI and Blazor Web projects (Home, Counter and Weather pages). The `Counter.razor` and `Weather.razor` pages are protected by the `[Authorize]` attribute so you cannot navigate to them unless you are logged in.
 
 ```code
 @page "/counter"
@@ -30,7 +30,7 @@ The shared UI is in the `MauiHybridAuth.Shared` project. This project contains t
 @attribute [Authorize]
 ```
 ### Routing in the MAUI & Blazor apps
-The `Routes.razor` uses the `AuthorizeRouteView` to route users appropriately based on their authentication status. If a user is not authenticated, they are redirected to the `Login` page. 
+The `Routes.razor` uses the `AuthorizeRouteView` to route users appropriately based on their authentication status. If a user is not authenticated, they are redirected to the `Login` page.
 
 ```code
 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
@@ -40,7 +40,7 @@ The `Routes.razor` uses the `AuthorizeRouteView` to route users appropriately ba
     <NotAuthorized>
         <Login />
     </NotAuthorized>
-</AuthorizeRouteView>  
+</AuthorizeRouteView>
 ```
 
 The `NavManu.razor` components contain the navigation menu that uses `AuthorizationView` to show/hide links based on the user's authentication status.
@@ -48,15 +48,15 @@ The `NavManu.razor` components contain the navigation menu that uses `Authorizat
 ```code
 <AuthorizeView>
     <NotAuthorized>
-       <!-- Navlinks that display when not logged in -->    
+       <!-- Navlinks that display when not logged in -->
     </NotAuthorized>
     <Authorized>
-        <!-- Navlinks that display when logged in -->    
-    </Authorized>               
+        <!-- Navlinks that display when logged in -->
+    </Authorized>
 </AuthorizeView>
 ```
 ### Setting up the server
-The Blazor Web app contains all the pages and uses the `SignInManager` framework class to manage logins and users. All of this is generated automatically when you create a Blazor Web project and select to use Authentication with Individual accounts. In order for the MAUI client (or any external client) to authenticate, the ASP.NET Identity endpoints need to be exposed. In the `Program.cs` file this is set up with the call to `AddIdentityEnpoints` and `MapIdentityApi`. NOTE: You'll need to remove the generated call to `.AddIdentityCookies` on `.AddAuthentication`. It is not necessary when calling `.AddIdentityEndpoints` and will result in an error. 
+The Blazor Web app contains all the pages and uses the `SignInManager` framework class to manage logins and users. All of this is generated automatically when you create a Blazor Web project and select to use Authentication with Individual accounts. In order for the MAUI client (or any external client) to authenticate, the ASP.NET Identity endpoints need to be exposed. In the `Program.cs` file this is set up with the call to `AddIdentityEnpoints` and `MapIdentityApi`. NOTE: You'll need to remove the generated call to `.AddIdentityCookies` on `.AddAuthentication`. It is not necessary when calling `.AddIdentityEndpoints` and will result in an error.
 
 ```code
 // Add Auth services used by the Web app
@@ -75,7 +75,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 });
- 
+
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
@@ -109,8 +109,8 @@ private async Task LoginUser()
         //Show error message
         loginFailureHidden = false;
         return;
-    }        
-        
+    }
+
     Navigation.NavigateTo(""); //Root URL
 }
 ```
@@ -120,7 +120,7 @@ NOTE: This sample only implements Login and Logout pages on the MAUI client but 
 The `ICustomAuthenticationStateProvider` interface is implemented by the `MauiAuthenticationStateProvider` class in the `MauiHybridAuth` MAUI project. This class is responsible for managing the user's authentication state and providing the `AuthenticationState` to the app. The `MauiAuthenticationStateProvider` class uses an `HttpClient` to make requests to the server to authenticate the user. See the official documentation for more information on [ASP.NET Core Blazor Hybrid authentication and authorization](https://learn.microsoft.com/en-us/aspnet/core/blazor/hybrid/security/?view=aspnetcore-8.0&pivots=maui).
 
 ```code
-public interface ICustomAuthenticationStateProvider 
+public interface ICustomAuthenticationStateProvider
 {
     public LoginStatus LoginStatus { get; set; }
     public AccessTokenInfo? AccessTokenInfo { get; }
@@ -129,9 +129,9 @@ public interface ICustomAuthenticationStateProvider
     void Logout();
 }
 ```
-The `MauiAuthenticationStateProvider` class uses the `HttpClientHelper` which handles calling localhost via the emulators and simulators for easy testing. See the [official documentation](https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services) for information on what you need to do to be able to call local services from emulators and simulators. 
+The `MauiAuthenticationStateProvider` class uses the `HttpClientHelper` which handles calling localhost via the emulators and simulators for easy testing. See the [official documentation](https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services) for information on what you need to do to be able to call local services from emulators and simulators.
 
-It also uses the `TokenStorage` class that uses [`SecureStorage` API](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage?view=net-maui-9.0) to store the user's token securely on the device. It refreshes the token if it's almost expired so the user doesn't have to login every time.  
+It also uses the `TokenStorage` class that uses [`SecureStorage` API](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage?view=net-maui-9.0) to store the user's token securely on the device. It refreshes the token if it's almost expired so the user doesn't have to login every time.
 
 ### MAUI MauiProgram.cs
 The MAUI project's `MauiProgram.cs` file is where the `MauiAuthenticationStateProvider` is registered with the DI container. It also needs to register the Authorization core components where things like `AuthorizeView` are defined.
@@ -142,6 +142,6 @@ builder.Services.AddAuthorizationCore();
 // This is our custom provider
 builder.Services.AddScoped<ICustomAuthenticationStateProvider, MauiAuthenticationStateProvider>();
 // Use our custom provider when the app needs an AuthenticationStateProvider
-builder.Services.AddScoped<AuthenticationStateProvider>(s 
+builder.Services.AddScoped<AuthenticationStateProvider>(s
     => (MauiAuthenticationStateProvider)s.GetRequiredService<ICustomAuthenticationStateProvider>());
 ```

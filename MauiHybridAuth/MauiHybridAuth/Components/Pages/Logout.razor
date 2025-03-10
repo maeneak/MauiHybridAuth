@@ -1,6 +1,6 @@
 ﻿@page "/logout"
 @inject NavigationManager navigationManager
-@inject ICustomAuthenticationStateProvider AuthStateProvider
+@inject MauiAuthenticationStateProvider AuthStateProvider
 
 <div class="loader loader-bouncing"><span>Redirecting...</span></div>
 @code{
@@ -8,5 +8,5 @@
     {
         AuthStateProvider.Logout();
         navigationManager.NavigateTo("/login");
-    }      
+    }
 }

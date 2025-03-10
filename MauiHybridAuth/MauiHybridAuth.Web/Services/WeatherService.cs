@@ -13,7 +13,7 @@ namespace MauiHybridAuth.Web.Services
 
             var startDate = DateOnly.FromDateTime(DateTime.Now);
             var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-            
+
             forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = startDate.AddDays(index),
