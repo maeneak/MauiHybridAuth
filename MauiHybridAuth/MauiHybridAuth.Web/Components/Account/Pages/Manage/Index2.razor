@@ -52,8 +52,8 @@
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
 
         Input.PhoneNumber ??= phoneNumber;
-        Input.GivenName ??= user.FirstName;
-        Input.Surname ??= user.LastName;
+        Input.GivenName ??= user.Fullname;
+        Input.Surname ??= user.PreferredName;
     }
 
     private async Task OnValidSubmitAsync()
@@ -66,8 +66,8 @@
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
             }
         }
-        user.FirstName = Input.GivenName!;
-        user.LastName = Input.Surname!;
+        user.Fullname = Input.GivenName!;
+        user.PreferredName = Input.Surname!;
         // if (Request.Form.Files.Count > 0)
         // {
         //     IFormFile file = Request.Form.Files.FirstOrDefault();

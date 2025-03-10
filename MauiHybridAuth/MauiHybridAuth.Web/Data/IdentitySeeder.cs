@@ -34,7 +34,7 @@
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    FirstName = "Admin",
+                    Fullname = "Admin",
                     PhoneNumber = "0712345678",
                     EmailConfirmed = true,
                     

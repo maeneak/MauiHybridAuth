@@ -7,11 +7,12 @@ namespace MauiHybridAuth.Web.Data
     public class ApplicationUser : IdentityUser
     {
         [PersonalData]
-        public string FirstName { get; set; } = string.Empty;
+        public string Fullname { get; set; } = string.Empty;
         [PersonalData]
-        public string? LastName { get; set; } = string.Empty;
+        public string PreferredName { get; set; } = string.Empty;
+        
         public byte[] ProfilePicture { get; set; } = new byte[0];
-        public string? Initials { get; set; } = string.Empty;
+        public string Initials { get; set; } = string.Empty;
         [NotMapped]
         public IEnumerable<string> Roles { get; set; } = new List<string>();
         [NotMapped]

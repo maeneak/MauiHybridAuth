@@ -25,6 +25,8 @@
         public static string LoginUrl => $"{BaseUrl}login";
         public static string RefreshUrl => $"{BaseUrl}refresh";
         public static string WeatherUrl => $"{BaseUrl}api/weather";
+        public static string UserInfoUrl => $"{BaseUrl}api/user/me";
+        public static string UserPictureUpdateUrl => $"{BaseUrl}api/user/setpicture";
 
         public static HttpClient GetHttpClient()
         {

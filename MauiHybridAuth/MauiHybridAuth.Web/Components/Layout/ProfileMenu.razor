@@ -35,7 +35,8 @@
                 @if (CurrentUser != null)
                 {
                     <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
-                        <MudText Typo="Typo.subtitle2">@($"{CurrentUser.FirstName} {CurrentUser.LastName}")</MudText>
+                        <MudText Typo="Typo.subtitle2">@($"{CurrentUser.PreferredName}")</MudText>
+                        <MudText Typo="Typo.body2">@($"{CurrentUser.Fullname}")</MudText>
                         <MudText Typo="Typo.body2">@CurrentUser.Email</MudText>
                         <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
                         <form action="Account/Logout" method="post">

@@ -39,20 +39,23 @@
                     }
                 </MudStack>
             </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudTextField Label="First Name" @bind-Value="User.FirstName" Variant="Variant.Text" />
+            <MudItem xs="12" md="5">
+                <MudTextField Required Label="Fullname" @bind-Value="User.Fullname" Variant="Variant.Text" />
             </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudTextField Label="Last Name" @bind-Value="User.LastName" Variant="Variant.Text" />
+            <MudItem xs="9" md="5">
+                <MudTextField Required Label="Preferred Name" @bind-Value="User.PreferredName" Variant="Variant.Text" />
+            </MudItem>
+            <MudItem xs="3" sm="2">
+                <MudTextField Required Label="Initials" @bind-Value="User.Initials" Variant="Variant.Text" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField Label="Email" @bind-Value="User.Email" Variant="Variant.Text" Error="@EmailConfirmationRequired" ErrorText="@(EmailConfirmationRequired ? "Not confirmed" : "")" />
+                <MudTextField Required Label="Email" @bind-Value="User.Email" Variant="Variant.Text" Error="@EmailConfirmationRequired" ErrorText="@(EmailConfirmationRequired ? "Not confirmed" : "")" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Username" @bind-Value="User.UserName" Variant="Variant.Text" />
+                <MudTextField Required Label="Username" @bind-Value="User.UserName" Variant="Variant.Text" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField Label="Mobile" @bind-Value="User.PhoneNumber" Variant="Variant.Text" />
+                <MudTextField Required Label="Mobile" @bind-Value="User.PhoneNumber" Variant="Variant.Text" />
             </MudItem>
             <MudItem xs="12">
                 <MudSelectExtended @bind-SelectedValues="User.Roles" Label="User Roles" Dense Variant="Variant.Text"
