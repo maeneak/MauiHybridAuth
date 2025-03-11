@@ -1,18 +1,11 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MauiHybridAuth.Shared.Services
+namespace MauiHybridAuth.Shared.Models
 {
-    public interface IUserInfoService
-    {
-        Task<UserInfo> GetUserInfoAsync();
-        Task UpdateProfilePictureAsync(IBrowserFile picture);
-    }
-
     public class UserInfo
     {
         public string? Id { get; set; }

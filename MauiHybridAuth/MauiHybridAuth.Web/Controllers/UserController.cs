@@ -1,5 +1,6 @@
-﻿using MauiHybridAuth.Shared.Services;
+﻿using MauiHybridAuth.Shared.Models;
 using MauiHybridAuth.Web.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace MauiHybridAuth.Web.Controllers
 {
     [ApiController]
     [Route("api/user")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;

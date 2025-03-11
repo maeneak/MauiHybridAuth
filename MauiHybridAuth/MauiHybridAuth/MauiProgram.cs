@@ -1,5 +1,6 @@
 ﻿using MauiHybridAuth.Services;
 using MauiHybridAuth.Shared.Services;
+using MauiHybridAuth.Shared.Theme;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -38,6 +39,7 @@ namespace MauiHybridAuth
             // Add device-specific services used by the MauiHybridAuth.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddScoped<IWeatherService, WeatherService>();
+            builder.Services.AddScoped<MudThemeService>();
 
             return builder.Build();
         }

@@ -1,18 +1,61 @@
-﻿@inherits LayoutComponentBase
+﻿@using MauiHybridAuth.Shared.Services;
+@using MauiHybridAuth.Shared.Theme
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ICustomAuthenticationStateProvider custAuthStateProvider
 
-<MudThemeProvider />
-<MudPopoverProvider />
+@inject MudThemeService mudThemeService
+
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
+<MudThemeProvider @ref="_mudThemeProvider" Theme="mudThemeService.CurrentTheme" @bind-IsDarkMode="mudThemeService.InDarkMode" />
+
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@NavDrawerToggle" />
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIconButton Color="Color.Inherit" Icon="@mudThemeService.Icon" OnClick="@((e) => mudThemeService.ToggleMode())" Size="Size.Medium" title="@mudThemeService.CurrentMode.ToString()" />
+            <AuthorizeView >
+                <Authorized >
+                    <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
+                            @if (custAuthStateProvider.UserInfo != null)
+                            {
+                                @if (custAuthStateProvider.UserInfo.ProfilePicture?.Length > 0)
+                                {
+                                    <MudImage Src="@(custAuthStateProvider.UserInfo.ProfilePicture)" />
+                                }
+                                else
+                                {
+                                    <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                                }
+                            }
+                            else
+                            {
+                                <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png"/>
+                            }
+                        </MudAvatar>
+                    </MudBadge>
+                </Authorized>
+                <NotAuthorized>
+                    <MudBadge Color="Color.Error" Overlap="true" Bordered="true">
+                        <MudAvatar onclick="@(() => ProfileDrawerToggle())">
+                            <MudImage Src="_content/MauiHybridAuth.Shared/img/profile.png" />
+                        </MudAvatar>
+                    </MudBadge>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudStack>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <MudDrawer @bind-Open="_navDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
+    </MudDrawer>
+    <MudDrawer Width="320px" Class="pa-2 pl-5 pr-5" @bind-Open="ProfileDrawerOpen" Variant="DrawerVariant.Temporary" 
+    ClipMode="DrawerClipMode.Always" Anchor="Anchor.Right" Elevation="2" OverlayAutoClose="true">
+        <ProfileMenu UserInfo="@custAuthStateProvider.UserInfo" />
     </MudDrawer>
     <MudMainContent Class="mt-16 pa-4">
         @Body
@@ -27,11 +70,35 @@
 </div>
 
 @code {
-    private bool _drawerOpen = true;
+    private bool ProfileDrawerOpen { get; set; } = false;
+    private bool _navDrawerOpen = true;
+    private bool _disposed = false;
+    MudThemeProvider? _mudThemeProvider;
 
-    private void DrawerToggle()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _drawerOpen = !_drawerOpen;
+        if (firstRender)
+        {
+            await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            mudThemeService.SystemInDarkMode = await _mudThemeProvider!.GetSystemPreference();
+            mudThemeService.CurrentMode = mudThemeService.SystemInDarkMode ? ThemeColorMode.Dark : ThemeColorMode.Light;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSystemPreferenceChanged(bool newValue)
+    {
+        mudThemeService.SystemInDarkMode = newValue;
+        StateHasChanged();
+    }
+
+    private void NavDrawerToggle()
+    {
+        _navDrawerOpen = !_navDrawerOpen;
+    }
+    private void ProfileDrawerToggle()
+    {
+        ProfileDrawerOpen = !ProfileDrawerOpen;
     }
 
 }
