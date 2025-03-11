@@ -7,11 +7,12 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject MudThemeService mudThemeService
 
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
-<MudThemeProvider @bind-IsDarkMode="@CustomAppTheme.InDarkMode" />
+<MudThemeProvider @ref="_mudThemeProvider" Theme="mudThemeService.CurrentTheme" @bind-IsDarkMode="mudThemeService.InDarkMode" />
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -19,6 +20,7 @@
         <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIconButton Color="Color.Inherit" Icon="@mudThemeService.Icon" OnClick="@((e) => mudThemeService.ToggleMode())" Size="Size.Medium" title="@mudThemeService.CurrentMode.ToString()" />
             <AuthorizeView>
                 <Authorized>
                     <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
@@ -74,11 +76,26 @@
 @code {
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
-    [CascadingParameter]
-    private CustomAppTheme? CustomAppTheme { get; set; }
     private ApplicationUser? CurrentUser { get; set; }
     private bool ProfileDrawerOpen { get; set; } = false;
     private bool _navDrawerOpen = true;
+    MudThemeProvider? _mudThemeProvider;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            mudThemeService.SystemInDarkMode = await _mudThemeProvider!.GetSystemPreference();
+            mudThemeService.CurrentMode = mudThemeService.SystemInDarkMode ? ThemeColorMode.Dark : ThemeColorMode.Light;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSystemPreferenceChanged(bool newValue)
+    {
+        mudThemeService.SystemInDarkMode = newValue;
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {

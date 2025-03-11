@@ -2,8 +2,6 @@
 @using MauiHybridAuth.Web.Components.Account.Pages
 @using Microsoft.AspNetCore.Components.Authorization
 
-<MudThemeProvider @ref="_mudThemeProvider" Theme="CustomAppTheme" />
-
 <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Shared._Imports).Assembly }">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
@@ -17,25 +15,5 @@
 
 @code {
 
-    [CascadingParameter]
-    private CustomAppTheme CustomAppTheme { get; set; } = default!;
-
-    MudThemeProvider _mudThemeProvider;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            CustomAppTheme.SystemInDarkMode = await _mudThemeProvider.GetSystemPreference();
-            CustomAppTheme.CurrentMode = CustomAppTheme.SystemInDarkMode ? ThemeColorMode.Dark : ThemeColorMode.Light;
-            StateHasChanged();
-        }
-    }
-
-    private async Task OnSystemPreferenceChanged(bool newValue)
-    {
-        CustomAppTheme.SystemInDarkMode = newValue;
-        StateHasChanged();
-    }
 
 }

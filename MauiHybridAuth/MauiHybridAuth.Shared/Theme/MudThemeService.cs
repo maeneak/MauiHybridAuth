@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MudBlazor;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MauiHybridAuth.Shared.Theme
 {
-    public class CustomAppTheme : MudBlazor.MudTheme, INotifyPropertyChanged
+    public class MudThemeService : INotifyPropertyChanged
     {
         ThemeColorMode _currentMode = ThemeColorMode.System;
         bool _systemInDarkMode;
@@ -20,6 +21,7 @@ namespace MauiHybridAuth.Shared.Theme
                 _currentMode = value ? ThemeColorMode.Dark : ThemeColorMode.Light;
             }
         }
+        public MudTheme CurrentTheme { get; set; } = new ();
         public bool SystemInDarkMode
         {
             get { return _systemInDarkMode; }

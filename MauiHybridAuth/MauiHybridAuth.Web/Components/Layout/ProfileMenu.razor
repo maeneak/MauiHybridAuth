@@ -60,24 +60,15 @@
     <MudLink Href="/Admin" Typo="Typo.body2">Manage users</MudLink>
     <MudSpacer />
     <MudStack Row Justify="Justify.FlexEnd" Class="pa-0 ma-0">
-        <MudIconButton Icon="@CustomAppTheme.Icon" OnClick="@((e) => ColorModeToggle())" Size="Size.Large" title="Color Mode" />
     </MudStack>
 </MudStack>
 
 @code {
-    [CascadingParameter]
-    private CustomAppTheme? CustomAppTheme { get; set; }
     [CascadingParameter]
     protected ApplicationUser? CurrentUser { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-    }
-
-    private void ColorModeToggle()
-    {
-        CustomAppTheme?.ToggleMode();
-        NavigationManager.Refresh();
     }
 }

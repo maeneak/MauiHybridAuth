@@ -1,7 +1,6 @@
 ﻿@using MauiHybridAuth.Shared.Theme
 @inherits LayoutComponentBase
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,7 +13,6 @@
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="_content/CodeBeam.MudBlazor.Extensions/MudExtensions.min.css" rel="stylesheet" />
     <HeadOutlet @rendermode="PageRenderMode" />
-    <MudThemeProvider Theme="CustomAppTheme" />
 </head>
 
 <body>
@@ -31,8 +29,6 @@
 @code {
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
-    [CascadingParameter]
-    private CustomAppTheme CustomAppTheme { get; set; } = default!;
 
     private IComponentRenderMode? PageRenderMode =>
         HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
