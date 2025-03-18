@@ -1,13 +1,10 @@
-﻿@using Finbuckle.MultiTenant
-@using Finbuckle.MultiTenant.Abstractions
-@using MauiHybridAuth.Shared.Services;
+﻿@using MauiHybridAuth.Shared.Services;
 @using MauiHybridAuth.Shared.Theme
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ICustomAuthenticationStateProvider custAuthStateProvider
 
 @inject MudThemeService mudThemeService
-@inject IMultiTenantContextAccessor<TenantInfo> multiTenantAccessor
 
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -17,7 +14,7 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@NavDrawerToggle" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application (@(multiTenantAccessor.MultiTenantContext?.TenantInfo?.Name))</MudText>
+        <MudText Typo="Typo.h5" Class="ml-3">Application </MudText>
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudIconButton Color="Color.Inherit" Icon="@mudThemeService.Icon" OnClick="@((e) => mudThemeService.ToggleMode())" Size="Size.Medium" title="@mudThemeService.CurrentMode.ToString()" />
