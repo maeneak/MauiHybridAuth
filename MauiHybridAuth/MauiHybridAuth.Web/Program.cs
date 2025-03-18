@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using MudExtensions.Services;
-using Finbuckle.MultiTenant;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,13 +67,6 @@ builder.Services.AddSwaggerGen();
 // Register needed elements for authentication:
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
 
-// Configure Finbuckle.MultiTenant
-builder.Services.AddMultiTenant<TenantInfo>()
-    .WithHostStrategy()
-    //.WithStaticStrategy("app")
-    .WithConfigurationStore()
-    .WithPerTenantAuthentication();
-
 var app = builder.Build();
 
 // Needed for external clients to log in
@@ -113,9 +105,6 @@ app.UseStaticFiles();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
-// Use MultiTenant middleware before routing and authentication
-//app.UseRouting();
-app.UseMultiTenant();
 
 app.UseAuthentication();
 app.UseAuthorization();
