@@ -10,7 +10,7 @@ namespace MauiHybridAuth.Shared.Models
     {
         public string? Id { get; set; }
         public string? Email { get; set; }
-        public string? Fullname { get; set; }
+        public string? Fullname { get; set; } = "Guest";
         public string? PreferredName { get; set; }
         public string? Initials { get; set; }
         public string? ProfilePicture { get; set; }

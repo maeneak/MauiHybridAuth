@@ -1,8 +1,9 @@
 ﻿@using MauiHybridAuth.Shared.Theme
 @using MauiHybridAuth.Web.Components.Account.Pages
 @using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
 
-<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Shared._Imports).Assembly }">
+<Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Shared._Imports).Assembly }">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
@@ -11,9 +12,14 @@
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" />
+        <MudText Typo="Typo.h6">Route not found: @Navigation.Uri</MudText>
+    </NotFound>
 </Router>
 
 @code {
-
-
+    protected override void OnInitialized()
+    {
+    }
 }

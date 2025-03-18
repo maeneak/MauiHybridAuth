@@ -8,20 +8,13 @@
         <Authorized>
             <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
             <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Weather</MudNavLink>
-            <form action="logout" method="post">
-                <AntiforgeryToken />
-                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                <button type="submit" class="mud-nav-link mud-ripple">
-                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
-                </button>
-            </form>
         </Authorized>
         <NotAuthorized>
             <MudNavLink Href="login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Password">Login</MudNavLink>
+            <MudNavLink OnClick="OpenRegister" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AppRegistration">Register</MudNavLink>
         </NotAuthorized>
     </AuthorizeView>
 </MudNavMenu>
-
 
 @code {
     private string? currentUrl;
@@ -32,6 +25,10 @@
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
+    private async void OpenRegister()
+    {
+        await Browser.Default.OpenAsync("https://localhost:7157/Account/Register");
+    }
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);

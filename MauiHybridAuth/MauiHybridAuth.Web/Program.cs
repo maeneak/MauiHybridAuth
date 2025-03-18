@@ -11,8 +11,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using MudExtensions.Services;
+using Finbuckle.MultiTenant;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,14 +65,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Register needed elements for authentication:
+// Register needed elements for authentication:
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
+
+// Configure Finbuckle.MultiTenant
+builder.Services.AddMultiTenant<TenantInfo>()
+    .WithHostStrategy()
+    //.WithStaticStrategy("app")
+    .WithConfigurationStore()
+    .WithPerTenantAuthentication();
 
 var app = builder.Build();
 
-//Needed for external clients to log in
+// Needed for external clients to log in
 app.MapIdentityApi<ApplicationUser>();
-app.MapControllers();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -89,37 +95,40 @@ if (app.Environment.IsDevelopment())
         // Seed roles and admin user
         await IdentitySeeder.SeedRolesAndAdminAsync(services);
     }
-    
-    // Apply migrations & create database if needed at startup
-    //using (var scope = app.Services.CreateScope())
-    //{
-    //    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    //    dbContext.Database.Migrate();
-    //}
+
     app.UseMigrationsEndPoint();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    //app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-app.UseAntiforgery();
 
-app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
+// Use MultiTenant middleware before routing and authentication
+//app.UseRouting();
+app.UseMultiTenant();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Use Antiforgery middleware after authentication and authorization, but before endpoints
+app.UseAntiforgery();
+
+app.MapControllers();
+app.MapStaticAssets();
 
 app.MapAdditionalIdentityEndpoints();
 
-//Add the weather API endpoint and require authorization
+// Add the weather API endpoint and require authorization
 app.MapGet("/api/weather", async (IWeatherService weatherService) =>
 {
     var forecasts = await weatherService.GetWeatherForecastsAsync();
