@@ -11,6 +11,7 @@
         {
             get
             {
+//-:cnd:noEmit
 #if DEBUG
                 //See: https://learn.microsoft.com/dotnet/maui/data-cloud/local-web-services
                 //Android Emulator uses 10.0.2.2 to refer to localhost
@@ -68,6 +69,6 @@
             return url.StartsWith("https://localhost");
         }
 #endif
+//+:cnd:noEmit
     }
-
 }

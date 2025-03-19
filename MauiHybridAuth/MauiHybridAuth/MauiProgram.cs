@@ -21,12 +21,12 @@ namespace MauiHybridAuth
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
-
+//-:cnd:noEmit
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
 #endif
-
+//+:cnd:noEmit
             //Register needed elements for authentication:
             // This is the core functionality
             builder.Services.AddAuthorizationCore();
