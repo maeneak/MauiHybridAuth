@@ -1,4 +1,4 @@
-# .NET MAUI Blazor Hybrid and Web App Auth with MudBlazor and dotnet new Template.
+# MudBlazor .NET MAUI Blazor Hybrid and Web App Auth with MudBlazor and dotnet new Template.
 Fork of the [Microsft MAUI Hybrid with Blazor Identity sample](https://github.com/BethMassi/MauiHybridAuth) converted to MudBlazor with added functionality.
 
 Additions include:
