@@ -4,7 +4,6 @@ using MauiHybridAuth.Web.Components;
 using MauiHybridAuth.Web.Components.Account;
 using MauiHybridAuth.Web.Data;
 using MauiHybridAuth.Web.Services;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -26,6 +25,12 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add Auth services used by the Web app
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+});
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -33,15 +38,10 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddScoped<MudThemeService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-});
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
@@ -64,11 +64,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register needed elements for authentication:
-builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMiddlewareResultHandler>();
-
 var app = builder.Build();
-
 // Needed for external clients to log in
 app.MapIdentityApi<ApplicationUser>();
 
@@ -101,7 +97,9 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseAntiforgery();
 
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MauiHybridAuth.Shared._Imports).Assembly);
@@ -109,11 +107,9 @@ app.MapRazorComponents<App>()
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Use Antiforgery middleware after authentication and authorization, but before endpoints
-app.UseAntiforgery();
-
 app.MapControllers();
-app.MapStaticAssets();
+// Needed for external clients to log in
+app.MapGroup("/identity").MapIdentityApi<ApplicationUser>();
 
 app.MapAdditionalIdentityEndpoints();
 

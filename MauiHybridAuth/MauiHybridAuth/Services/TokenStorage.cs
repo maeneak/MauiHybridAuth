@@ -41,16 +41,16 @@ namespace MauiHybridAuth.Services
             {
                 if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(email))
                 {
-                    var loginToken = JsonSerializer.Deserialize<LoginToken>(token);
+                    var loginToken = JsonSerializer.Deserialize<LoginResponse>(token);
                     if (loginToken != null)
                     {
                         DateTime tokenExpiration = DateTime.UtcNow.AddSeconds(loginToken.ExpiresIn);
 
                         accessToken = new AccessTokenInfo
                         {
-                            LoginToken = loginToken,
+                            LoginResponse = loginToken,
                             Email = email,
-                            TokenExpiration = tokenExpiration
+                            AccessTokenExpiration = tokenExpiration
                         };
 
                         await SecureStorage.SetAsync(StorageKeyName, JsonSerializer.Serialize<AccessTokenInfo>(accessToken));

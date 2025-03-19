@@ -7,9 +7,9 @@ namespace MauiHybridAuth.Services
 {
     public class WeatherService : IWeatherService
     {
-        private readonly ICustomAuthenticationStateProvider _authenticationStateProvider;
+        private readonly MauiAuthenticationStateProvider _authenticationStateProvider;
 
-        public WeatherService(ICustomAuthenticationStateProvider authenticationStateProvider)
+        public WeatherService(MauiAuthenticationStateProvider authenticationStateProvider)
         {
             _authenticationStateProvider = authenticationStateProvider;
         }
@@ -22,28 +22,35 @@ namespace MauiHybridAuth.Services
                 var httpClient = HttpClientHelper.GetHttpClient();
                 var weatherUrl = HttpClientHelper.WeatherUrl;
 
-                var loginToken = _authenticationStateProvider.AccessTokenInfo?.LoginToken;
-                var token = loginToken?.AccessToken;
-                var scheme = loginToken?.TokenType; //"Bearer"
+                var accessTokenInfo = await _authenticationStateProvider.GetAccessTokenInfoAsync();
+
+                if (accessTokenInfo is null)
+                {
+                    throw new Exception("Could not retrieve access token to get weather forecast.");
+                }
+
+                var token = accessTokenInfo.LoginResponse.AccessToken;
+                var scheme = accessTokenInfo.LoginResponse.TokenType; //"Bearer"
 
                 if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
-                    forecasts = await httpClient.GetFromJsonAsync<WeatherForecast[]>(weatherUrl);
+                    forecasts = (await httpClient.GetFromJsonAsync<WeatherForecast[]>(weatherUrl)) ?? [];
                 }
                 else
                 {
-                    Debug.WriteLine("Token or scheme is null or empty.");                  
+                    Debug.WriteLine("Token or scheme is null or empty.");
                 }
             }
             catch (HttpRequestException httpEx)
             {
-                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");                
+                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred: {ex.Message}");                
+                Debug.WriteLine($"An error occurred: {ex.Message}");
             }
+
             return forecasts;
         }
     }
