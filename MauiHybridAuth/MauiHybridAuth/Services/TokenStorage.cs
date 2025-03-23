@@ -13,7 +13,8 @@ namespace MauiHybridAuth.Services
 
         public static void RemoveToken()
         {
-            SecureStorage.Remove(StorageKeyName);
+            //SecureStorage.RemoveAll();
+            //SecureStorage.Remove(StorageKeyName);
         }
 
         public static async Task<AccessTokenInfo?> GetTokenFromSecureStorageAsync()

@@ -1,8 +1,8 @@
 ﻿@using MauiHybridAuth.Shared.Theme
+@using MauiHybridAuth.Shared.Services
 @using MauiHybridAuth.Web.Components.Account
 @using MauiHybridAuth.Web.Data
-@inject NavigationManager NavigationManager
-@inject IdentityUserAccessor UserAccessor
+@inject IUserInfoService UserInfoService
 
 <MudStack Spacing="4" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Stretch" Style="height:100%">
     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -15,11 +15,11 @@
             <MudStack Row Justify="Justify.Center" Spacing="5">
                 <MudBadge Color="Color.Success" Overlap="true" Bordered="true" Icon="@Icons.Material.Filled.Check">
                     <MudAvatar Style="width:88px; height:88px;" Rounded>
-                        @if (CurrentUser != null)
+                        @if (UserInfoService.UserInfo != null)
                         {
-                            @if (CurrentUser.ProfilePicture?.Length > 0)
+                            @if (UserInfoService.UserInfo.ProfilePicture?.Length > 0)
                             {
-                                <MudImage Src="@($"data:image/*;base64,{Convert.ToBase64String(CurrentUser.ProfilePicture)}")" />
+                                <MudImage Src="@UserInfoService.UserInfo.ProfilePicture" />
                             }
                             else
                             {
@@ -32,12 +32,12 @@
                         }
                     </MudAvatar>
                 </MudBadge>
-                @if (CurrentUser != null)
+                @if (UserInfoService.UserInfo != null)
                 {
                     <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
-                        <MudText Typo="Typo.subtitle2">@($"{CurrentUser.PreferredName}")</MudText>
-                        <MudText Typo="Typo.body2">@($"{CurrentUser.Fullname}")</MudText>
-                        <MudText Typo="Typo.body2">@CurrentUser.Email</MudText>
+                        <MudText Typo="Typo.subtitle2">@($"{UserInfoService.UserInfo.PreferredName}")</MudText>
+                        <MudText Typo="Typo.body2">@($"{UserInfoService.UserInfo.Fullname}")</MudText>
+                        <MudText Typo="Typo.body2">@UserInfoService.UserInfo.Email</MudText>
                         <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
                         <form action="Account/Logout" method="post">
                             <AntiforgeryToken />
@@ -64,8 +64,6 @@
 </MudStack>
 
 @code {
-    [CascadingParameter]
-    protected ApplicationUser? CurrentUser { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

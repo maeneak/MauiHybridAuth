@@ -104,7 +104,6 @@ namespace MauiHybridAuth.Services
 
                     authenticatedUser = CreateAuthenticatedUser(loginModel.Email);
                     LoginStatus = LoginStatus.Success;
-                    await RefreshUserInfoAsync();
                 }
                 else
                 {
@@ -132,7 +131,6 @@ namespace MauiHybridAuth.Services
             {
                 authenticatedUser = CreateAuthenticatedUser(_accessToken!.Email);
                 LoginStatus = LoginStatus.Success;
-                await RefreshUserInfoAsync();
             }
 
 
@@ -202,82 +200,6 @@ namespace MauiHybridAuth.Services
             var claims = new[] { new Claim(ClaimTypes.Name, email) };  //TODO: Add more claims as needed
             var identity = new ClaimsIdentity(claims, AuthenticationType);
             return new ClaimsPrincipal(identity);
-        }
-        public async Task RefreshUserInfoAsync()
-        {
-            UserInfo userInfo = new UserInfo();
-            try
-            {
-                var httpClient = HttpClientHelper.GetHttpClient();
-                var userInfoUrl = HttpClientHelper.UserInfoUrl;
-
-                var accessTokenInfo = await GetAccessTokenInfoAsync();
-
-                if (accessTokenInfo is null)
-                {
-                    throw new Exception("Could not retrieve access token to get weather forecast.");
-                }
-
-                var token = accessTokenInfo.LoginResponse.AccessToken;
-                var scheme = accessTokenInfo.LoginResponse.TokenType; //"Bearer"
-
-                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
-                {
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
-                    userInfo = await httpClient.GetFromJsonAsync<UserInfo>(userInfoUrl);
-                }
-                else
-                {
-                    Debug.WriteLine("Token or scheme is null or empty.");
-                }
-            }
-            catch (HttpRequestException httpEx)
-            {
-                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"An error occurred: {ex.Message}");
-            }
-            _userInfo = userInfo;
-        }
-        public async Task UpdateProfilePictureAsync(IBrowserFile picture)
-        {
-            try
-            {
-                var httpClient = HttpClientHelper.GetHttpClient();
-                var setPictureUrl = HttpClientHelper.UserPictureUpdateUrl;
-
-                var accessTokenInfo = await GetAccessTokenInfoAsync();
-
-                if (accessTokenInfo is null)
-                {
-                    throw new Exception("Could not retrieve access token to get weather forecast.");
-                }
-
-                var token = accessTokenInfo.LoginResponse.AccessToken;
-                var scheme = accessTokenInfo.LoginResponse.TokenType; //"Bearer"
-                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
-                {
-                    var content = new MultipartFormDataContent();
-                    content.Add(new StreamContent(picture.OpenReadStream()), "file", picture.Name);
-
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
-                    var httpResponse = await httpClient.PostAsync(setPictureUrl, content);
-                }
-                else
-                {
-                    Debug.WriteLine("Token or scheme is null or empty.");
-                }
-            }
-            catch (HttpRequestException httpEx)
-            {
-                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"An error occurred: {ex.Message}");
-            }
         }
     }
 }

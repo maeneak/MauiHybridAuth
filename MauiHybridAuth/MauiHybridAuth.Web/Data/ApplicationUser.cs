@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MauiHybridAuth.Web.Data
@@ -18,7 +19,7 @@ namespace MauiHybridAuth.Web.Data
         [NotMapped]
         public string ProfilePictureBase64 { 
             get {
-                return $"data:image/*;base64,{Convert.ToBase64String(ProfilePicture)}";
+                return !ProfilePicture.IsNullOrEmpty() ? $"data:image/*;base64,{Convert.ToBase64String(ProfilePicture)}" : string.Empty;
             } 
         }
 

@@ -40,6 +40,7 @@ namespace MauiHybridAuth
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddScoped<IWeatherService, WeatherService>();
             builder.Services.AddScoped<MudThemeService>();
+            builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 
             return builder.Build();
         }

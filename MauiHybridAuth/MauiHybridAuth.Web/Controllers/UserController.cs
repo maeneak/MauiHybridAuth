@@ -25,7 +25,7 @@ namespace MauiHybridAuth.Web.Controllers
             if (user == null)
                 return NotFound();
 
-            return Ok(new UserInfo() {
+            return base.Ok(new Shared.Models.UserInfo() {
                 Id = user.Id, 
                 Email = user.Email!, 
                 Fullname = user.Fullname, 
