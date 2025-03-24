@@ -31,6 +31,7 @@ namespace MauiHybridAuth
             // This is the core functionality
             builder.Services.AddAuthorizationCore();
             // This is our custom provider
+            builder.Services.AddScoped<IUserInfoService, UserInfoService>();
             builder.Services.AddScoped<MauiAuthenticationStateProvider, MauiAuthenticationStateProvider>();
             // Use our custom provider when the app needs an AuthenticationStateProvider
             builder.Services.AddScoped<AuthenticationStateProvider>(s
@@ -40,7 +41,6 @@ namespace MauiHybridAuth
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddScoped<IWeatherService, WeatherService>();
             builder.Services.AddScoped<MudThemeService>();
-            builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 
             return builder.Build();
         }

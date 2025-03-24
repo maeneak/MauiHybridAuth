@@ -1,5 +1,6 @@
 using MauiHybridAuth.Models;
 using MauiHybridAuth.Shared.Models;
+using MauiHybridAuth.Shared.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
@@ -25,14 +26,18 @@ namespace MauiHybridAuth.Services
         private static ClaimsPrincipal _defaultUser = new ClaimsPrincipal(new ClaimsIdentity());
         private static Task<AuthenticationState> _defaultAuthState = Task.FromResult(new AuthenticationState(_defaultUser));
 
-        private UserInfo? _userInfo;
-        public UserInfo? UserInfo { get => _userInfo; }
+        private readonly IUserInfoService _userInfoService;
 
         public LoginStatus LoginStatus { get; set; } = LoginStatus.None;
         public string LoginFailureMessage { get; set; } = "";
 
         private Task<AuthenticationState> _currentAuthState = _defaultAuthState;
         private AccessTokenInfo? _accessToken;
+
+        public MauiAuthenticationStateProvider(IUserInfoService userInfoService)
+        {
+            _userInfoService = userInfoService;
+        }
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
@@ -64,7 +69,7 @@ namespace MauiHybridAuth.Services
             _currentAuthState = _defaultAuthState;
             _accessToken = null;
             TokenStorage.RemoveToken();
-            _userInfo = null;
+            _userInfoService.UserInfo = null;
             NotifyAuthenticationStateChanged(_defaultAuthState);
         }
 
@@ -78,6 +83,8 @@ namespace MauiHybridAuth.Services
             async Task<AuthenticationState> LogInAsyncCore(LoginRequest loginModel)
             {
                 var user = await LoginWithProviderAsync(loginModel);
+                await RefreshUserInfoAsync();
+
                 return new AuthenticationState(user);
             }
         }
@@ -109,7 +116,7 @@ namespace MauiHybridAuth.Services
                 {
                     LoginFailureMessage = "Invalid Email or Password. Please try again.";
                     LoginStatus = LoginStatus.Failed;
-                    _userInfo = null;
+                    _userInfoService.UserInfo = null;
                 }
             }
             catch (Exception ex)
@@ -183,6 +190,7 @@ namespace MauiHybridAuth.Services
                     response.EnsureSuccessStatusCode();
                     var token = await response.Content.ReadAsStringAsync();
                     _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
+                    await RefreshUserInfoAsync();  
                     return true;
                 }
 
@@ -201,5 +209,83 @@ namespace MauiHybridAuth.Services
             var identity = new ClaimsIdentity(claims, AuthenticationType);
             return new ClaimsPrincipal(identity);
         }
+        public async Task RefreshUserInfoAsync()
+        {
+            UserInfo? userInfo = new UserInfo();
+            try
+            {
+                var httpClient = HttpClientHelper.GetHttpClient();
+                var userInfoUrl = HttpClientHelper.UserInfoUrl;
+
+                var accessTokenInfo = await GetAccessTokenInfoAsync();
+
+                if (accessTokenInfo is null)
+                {
+                    throw new Exception("Could not retrieve access token to get user details.");
+                }
+
+                var token = accessTokenInfo.LoginResponse.AccessToken;
+                var scheme = accessTokenInfo.LoginResponse.TokenType; //"Bearer"
+
+                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
+                    userInfo = await httpClient.GetFromJsonAsync<UserInfo>(userInfoUrl);
+                }
+                else
+                {
+                    Debug.WriteLine("Token or scheme is null or empty.");
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred: {ex.Message}");
+            }
+            _userInfoService.UserInfo = userInfo;
+        }
+
+        public async Task UpdateProfilePictureAsync(IBrowserFile picture)
+        {
+            try
+            {
+                var httpClient = HttpClientHelper.GetHttpClient();
+                var setPictureUrl = HttpClientHelper.UserPictureUpdateUrl;
+
+                var accessTokenInfo = await GetAccessTokenInfoAsync();
+
+                if (accessTokenInfo is null)
+                {
+                    throw new Exception("Could not retrieve access token to get weather forecast.");
+                }
+
+                var token = accessTokenInfo.LoginResponse.AccessToken;
+                var scheme = accessTokenInfo.LoginResponse.TokenType; //"Bearer"
+                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(scheme))
+                {
+                    var content = new MultipartFormDataContent();
+                    content.Add(new StreamContent(picture.OpenReadStream()), "file", picture.Name);
+
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
+                    var httpResponse = await httpClient.PostAsync(setPictureUrl, content);
+                }
+                else
+                {
+                    Debug.WriteLine("Token or scheme is null or empty.");
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                Debug.WriteLine($"HTTP Request error: {httpEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
+
     }
 }

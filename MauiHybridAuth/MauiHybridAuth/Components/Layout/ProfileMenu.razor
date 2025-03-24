@@ -33,12 +33,12 @@
                         }
                     </MudAvatar>
                 </MudBadge>
-                @if (userInfoService.UserInfo != null)
+                @if (userInfoService.UserInfo != null || userInfoService.UserInfo == null)
                 {
                     <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
-                        <MudText Typo="Typo.subtitle2">@($"{userInfoService.UserInfo.PreferredName}")</MudText>
-                        <MudText Typo="Typo.body2">@($"{userInfoService.UserInfo.Fullname}")</MudText>
-                        <MudText Typo="Typo.body2">@userInfoService.UserInfo.Email</MudText>
+                        <MudText Typo="Typo.subtitle2">@($"{userInfoService.UserInfo?.PreferredName}")</MudText>
+                        <MudText Typo="Typo.body2">@($"{userInfoService.UserInfo?.Fullname}")</MudText>
+                        <MudText Typo="Typo.body2">@userInfoService.UserInfo?.Email</MudText>
                         <MudLink Typo="Typo.body2" OnClick="Logout">Logout</MudLink>
                     </MudStack>
                 } 
