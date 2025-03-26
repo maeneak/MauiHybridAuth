@@ -1,11 +1,12 @@
 ﻿@using MauiHybridAuth.Shared.Theme
+@using MauiHybridAuth.Shared.Layout
 @using MauiHybridAuth.Web.Components.Account.Pages
 @using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 
 <Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Shared._Imports).Assembly }">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
             <NotAuthorized>
                 <Login />
             </NotAuthorized>
