@@ -18,4 +18,4 @@ Run the web project to test setup. Default admin login: admin@app.email p: Admin
 
 The project has been setup to run in Visual Studio but should be easily adapted to vscode
 
-## 'Web' project must be running to run Maui Projects
+'Web' project must be running to run the Maui Project
