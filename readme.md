@@ -1,4 +1,4 @@
-# MudBlazor MAUI Blazor Hybrid and Web App, with Core Identity and dotnet new Template.
+# MudBlazor MAUI Blazor Hybrid and Web App, with Core Identity and dotnet new Template for Visual Studio.
 Fork of the [Microsft MAUI Hybrid with Blazor Identity sample](https://github.com/BethMassi/MauiHybridAuth) converted to MudBlazor with added functionality.
 
 Additions include:
@@ -14,8 +14,6 @@ Additions include:
 3. Open a terminal in the repo root folder and type ```dotnet new install .```
 4. Create a new project in the current directory from the terminal using ```dotnet new maui-auth -n {name of project}``` (will create a subdirectory with the name of your project)
 
-Run the web project to test setup. Default admin login: admin@app.email p: Admin@123
+Run the web project to test setup. Web project must be running to supply Identity authentication to the Maui Project.
+Default admin login: admin@app.email p: Admin@123
 
-The project has been setup to run in Visual Studio but should be easily adapted to vscode
-
-'Web' project must be running to run the Maui Project
