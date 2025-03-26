@@ -1,6 +1,7 @@
 ﻿@using MauiHybridAuth.Shared.Theme
 @using MauiHybridAuth.Shared.Services
 @inject IUserInfoService UserInfoService
+@inject IFormFactor FormFactor
 
 <MudStack Spacing="4" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Stretch" Style="height:100%">
     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -30,22 +31,25 @@
                         }
                     </MudAvatar>
                 </MudBadge>
-                @if (UserInfoService.UserInfo != null)
-                {
-                    <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+                <MudStack Spacing="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+                    @if (UserInfoService.UserInfo != null)
+                    {
                         <MudText Typo="Typo.subtitle2">@($"{UserInfoService.UserInfo.PreferredName}")</MudText>
                         <MudText Typo="Typo.body2">@($"{UserInfoService.UserInfo.Fullname}")</MudText>
                         <MudText Typo="Typo.body2">@UserInfoService.UserInfo.Email</MudText>
-                        <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
-                        <form action="Account/Logout" method="post">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="" />
-                            <button type="submit" class="mud-link mud-ripple">
-                                <MudLink Typo="Typo.body2">Logout</MudLink>
-                            </button>
-                        </form>
-                    </MudStack>
-                } 
+                        @if(FormFactor.GetFormFactor() == "Web")
+                        {
+                            <MudLink Typo="Typo.body2" Href="/Account/Manage">Manage account</MudLink>
+                        }
+                    }
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="" />
+                        <button type="submit" class="mud-link mud-ripple">
+                            <MudLink Typo="Typo.body2">Logout</MudLink>
+                        </button>
+                    </form>
+                </MudStack>
             </MudStack>
         </Authorized>
         <NotAuthorized>
@@ -55,7 +59,16 @@
             </MudStack>
         </NotAuthorized>
     </AuthorizeView>
-    <MudLink Href="/Admin" Typo="Typo.body2">Manage users</MudLink>
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            @if (FormFactor.GetFormFactor() == "Web")
+            {
+                <MudStack AlignItems="AlignItems.Start" Class="pa-0 ma-0">
+                    <MudLink Href="/Admin" Typo="Typo.body2">Manage all users</MudLink>
+                </MudStack>
+            }
+        </Authorized>
+    </AuthorizeView>
     <MudSpacer />
     <MudStack Row Justify="Justify.FlexEnd" Class="pa-0 ma-0">
     </MudStack>

@@ -83,7 +83,6 @@ namespace MauiHybridAuth.Services
             async Task<AuthenticationState> LogInAsyncCore(LoginRequest loginModel)
             {
                 var user = await LoginWithProviderAsync(loginModel);
-                await RefreshUserInfoAsync();
 
                 return new AuthenticationState(user);
             }
@@ -110,6 +109,8 @@ namespace MauiHybridAuth.Services
                     _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, loginModel.Email);
 
                     authenticatedUser = CreateAuthenticatedUser(loginModel.Email);
+                    await RefreshUserInfoAsync();
+
                     LoginStatus = LoginStatus.Success;
                 }
                 else
@@ -137,6 +138,8 @@ namespace MauiHybridAuth.Services
             if (await UpdateAndValidateAccessTokenAsync())
             {
                 authenticatedUser = CreateAuthenticatedUser(_accessToken!.Email);
+                await RefreshUserInfoAsync();
+
                 LoginStatus = LoginStatus.Success;
             }
 
@@ -190,7 +193,6 @@ namespace MauiHybridAuth.Services
                     response.EnsureSuccessStatusCode();
                     var token = await response.Content.ReadAsStringAsync();
                     _accessToken = await TokenStorage.SaveTokenToSecureStorageAsync(token, email);
-                    await RefreshUserInfoAsync();  
                     return true;
                 }
 
