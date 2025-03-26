@@ -19,7 +19,7 @@
                         {
                             @if (UserInfoService.UserInfo.ProfilePicture?.Length > 0)
                             {
-                                <MudImage Src="@UserInfoService.UserInfo.ProfilePicture" />
+                                <MudImage Src="@UserInfoService.UserInfo.ProfilePictureBase64" />
                             }
                             else
                             {

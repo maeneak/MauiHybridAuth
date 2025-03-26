@@ -31,7 +31,7 @@ namespace MauiHybridAuth.Web.Controllers
                 Fullname = user.Fullname, 
                 PreferredName = user.PreferredName,
                 Initials = user.Initials!,
-                ProfilePicture = user.ProfilePictureBase64 });
+                ProfilePicture = user.ProfilePicture });
         }
 
         [HttpPost("setpicture")]

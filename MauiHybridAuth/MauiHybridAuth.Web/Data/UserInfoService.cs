@@ -47,7 +47,7 @@ namespace MauiHybridAuth.Web.Data
                             Fullname = user?.Fullname,
                             PreferredName = user?.PreferredName,
                             Initials = user?.Initials,
-                            ProfilePicture = user?.ProfilePictureBase64
+                            ProfilePicture = user!.ProfilePicture
                         };
                     }
                     else
@@ -75,7 +75,7 @@ namespace MauiHybridAuth.Web.Data
                     Fullname = user?.Fullname,
                     PreferredName = user?.PreferredName,
                     Initials = user?.Initials,
-                    ProfilePicture = user?.ProfilePictureBase64
+                    ProfilePicture = user!.ProfilePicture
                 };
             }
             else

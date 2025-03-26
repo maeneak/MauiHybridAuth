@@ -12,7 +12,7 @@ namespace MauiHybridAuth.Web.Data
         [PersonalData]
         public string PreferredName { get; set; } = string.Empty;
         
-        public byte[] ProfilePicture { get; set; } = new byte[0];
+        public byte[] ProfilePicture { get; set; } = Array.Empty<byte>();
         public string Initials { get; set; } = string.Empty;
         [NotMapped]
         public IEnumerable<string> Roles { get; set; } = new List<string>();
